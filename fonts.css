@@ -1,11 +1,27 @@
-/* Gold Gradient Text */
-.text-gradient-gold {
+/* ==========================================================
+   GOLD GRADIENT TXT
+   ========================================================== */
   background: linear-gradient(135deg, #C56129 0%, #F5AD59 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
+
+/* HIGHLIGHT LAST WORD */
+ .highlight-last-word {
+    display: inline-block;
+    background: linear-gradient(
+      90deg,
+      #C56129 0%,
+      #F5AD59 98.47%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
 
 /* ==========================================================
    HACK THE BUTTON TEXT UNDERLINE
@@ -14,3 +30,6 @@
  .primary-btn-txt {
     text-decoration: none !important;
   }
+
+
+
