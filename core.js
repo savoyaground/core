@@ -213,6 +213,31 @@ function initStatsCarousel() {
 
 
 /* =========================================
+   HIGHLIGHT LAST WORD
+========================================= */
+function initHighlightLastWord() {
+  document.querySelectorAll('[data-highlight-last-word]').forEach(heading => {
+    const text = heading.textContent.trim();
+    const lastSpace = text.lastIndexOf(' ');
+
+    if (lastSpace === -1) return;
+
+    const precedingText = text.slice(0, lastSpace + 1);
+    const lastWord = text.slice(lastSpace + 1);
+    const highlight = document.createElement('span');
+
+    highlight.className = 'highlight-last-word';
+    highlight.textContent = lastWord;
+
+    heading.replaceChildren(
+      document.createTextNode(precedingText),
+      highlight
+    );
+  });
+}
+
+
+/* =========================================
    INIT
 ========================================= */
 function initAll() {
@@ -221,6 +246,7 @@ function initAll() {
   initFadeSystem();
   initLogoCarousel();
   initStatsCarousel();
+  initHighlightLastWord();
 }
 
 
