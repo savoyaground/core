@@ -6,3 +6,11 @@
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
+
+/* ==========================================================
+   HACK THE BUTTON TEXT UNDERLINE
+   ========================================================== */
+
+ .primary-btn-txt {
+    text-decoration: none !important;
+  }
