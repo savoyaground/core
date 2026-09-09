@@ -1,0 +1,231 @@
+<style>
+
+/* =========================================
+   CORE RESET
+========================================= */
+body {
+  margin: 0;
+}
+
+/* =========================================
+   ICONS
+========================================= */
+.icon-bold {
+  stroke: currentColor;
+  stroke-width: 0.75;
+}
+
+/* =========================================
+   FADE-IN
+========================================= */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.fade-in.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================================
+   FADE-SCALE
+========================================= */
+.fade-scale {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-scale.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* =========================================
+   HERO PARALLAX
+========================================= */
+.v2-hero-parallax {
+  position: fixed;
+  top: 65px;
+  left: 0;
+  width: 100%;
+  height: 70vh;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* =========================================
+   HERO BG WRAPPER
+========================================= */
+.v2-hero-bg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* =========================================
+   HERO IMAGES
+========================================= */
+.v2-hero-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: none;
+  will-change: transform;
+}
+
+.v2-hero-img.img-lg {
+  display: block;
+}
+
+/* =========================================
+   RESPONSIVE HERO
+========================================= */
+@media (max-width: 991px) {
+  .v2-hero-parallax {
+    height: 60vh;
+  }
+
+  .v2-hero-img {
+    display: none;
+  }
+
+  .v2-hero-img.img-md {
+    display: block;
+  }
+}
+
+@media (max-width: 767px) {
+  .v2-hero-parallax {
+    height: 50vh;
+  }
+
+  .v2-hero-img {
+    display: none;
+  }
+
+  .v2-hero-img.img-sm {
+    display: block;
+  }
+}
+
+/* =========================================
+   HERO CONTENT
+========================================= */
+.v2-hero-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  z-index: 2;
+}
+
+/* =========================================
+   CONTENT WRAPPER (FINAL CLEAN FIX)
+========================================= */
+.v2-content-wrapper {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+
+}
+
+/* =========================================
+   LOGO CAROUSEL
+========================================= */
+.logo-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.logo-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.logo-track img {
+  opacity: 0.6;
+  transition: 0.3s ease;
+}
+
+.logo-track img:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* =========================================
+   LOGO TRACK (TIGHT VARIANT)
+========================================= */
+.logo-track--tight {
+  gap: clamp(40px, 6vw, 100px);
+}
+
+@media (max-width: 991px) {
+  .logo-track--tight {
+    gap: 0px;
+  }
+}
+
+/* =========================================
+   STATS CAROUSEL
+========================================= */
+.stats-carousel {
+  overflow: hidden;
+}
+
+.stats-track {
+  display: flex;
+  width: max-content;
+  gap: 0px;
+  flex-wrap: nowrap;
+  will-change: transform;
+}
+
+.stat-card {
+  flex: none;
+  min-width: 260px;
+}
+
+.stat-inner {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: 0.6s ease;
+}
+
+.stat-inner.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================================
+   MOBILE FIX
+========================================= */
+@media (max-width: 1279px) {
+  .v2-hero-parallax {
+    position: relative;
+    top: 0;
+    height: 70vh;
+  }
+
+  .v2-content-wrapper {
+    margin-top: 0 !important;
+  }
+}
+
+/* =========================================
+   LORDICON
+========================================= */
+.lordicon-dynamic {
+  transform: scale(1.1);
+}
+
+</style>
