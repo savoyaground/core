@@ -218,16 +218,23 @@ function initStatsCarousel() {
 function initHighlightLastWord() {
   document.querySelectorAll('[data-highlight-last-word]').forEach(heading => {
     const text = heading.textContent.trim();
-    const lastSpace = text.lastIndexOf(' ');
+    const requestedWordCount = Number.parseInt(
+      heading.getAttribute('data-highlight-last-word'),
+      10
+    );
+    const wordCount = Number.isInteger(requestedWordCount) && requestedWordCount > 0
+      ? requestedWordCount
+      : 1;
+    const words = text.split(/\s+/);
 
-    if (lastSpace === -1) return;
+    if (words.length <= wordCount) return;
 
-    const precedingText = text.slice(0, lastSpace + 1);
-    const lastWord = text.slice(lastSpace + 1);
+    const precedingText = `${words.slice(0, -wordCount).join(' ')} `;
+    const highlightedText = words.slice(-wordCount).join(' ');
     const highlight = document.createElement('span');
 
     highlight.className = 'highlight-last-word';
-    highlight.textContent = lastWord;
+    highlight.textContent = highlightedText;
 
     heading.replaceChildren(
       document.createTextNode(precedingText),
