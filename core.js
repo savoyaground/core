@@ -213,11 +213,49 @@ function initStatsCarousel() {
 
 
 /* =========================================
-   HIGHLIGHT LAST WORD
+   HIGHLIGHT HEADING WORDS
 ========================================= */
 function initHighlightLastWord() {
-  document.querySelectorAll('[data-highlight-last-word]').forEach(heading => {
+  document.querySelectorAll(
+    '[data-highlight-last-word], [data-highlight-word]'
+  ).forEach(heading => {
     const text = heading.textContent.trim();
+    const words = text.split(/\s+/);
+    const requestedWordPosition = Number.parseInt(
+      heading.getAttribute('data-highlight-word'),
+      10
+    );
+
+    if (
+      Number.isInteger(requestedWordPosition) &&
+      requestedWordPosition > 0 &&
+      requestedWordPosition <= words.length
+    ) {
+      const wordIndex = requestedWordPosition - 1;
+      const highlight = document.createElement('span');
+      const content = [];
+
+      highlight.className = 'highlight-last-word';
+      highlight.textContent = words[wordIndex];
+
+      if (wordIndex > 0) {
+        content.push(
+          document.createTextNode(`${words.slice(0, wordIndex).join(' ')} `)
+        );
+      }
+
+      content.push(highlight);
+
+      if (wordIndex < words.length - 1) {
+        content.push(
+          document.createTextNode(` ${words.slice(wordIndex + 1).join(' ')}`)
+        );
+      }
+
+      heading.replaceChildren(...content);
+      return;
+    }
+
     const requestedWordCount = Number.parseInt(
       heading.getAttribute('data-highlight-last-word'),
       10
@@ -225,8 +263,6 @@ function initHighlightLastWord() {
     const wordCount = Number.isInteger(requestedWordCount) && requestedWordCount > 0
       ? requestedWordCount
       : 1;
-    const words = text.split(/\s+/);
-
     if (words.length <= wordCount) return;
 
     const precedingText = `${words.slice(0, -wordCount).join(' ')} `;
