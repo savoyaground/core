@@ -101,9 +101,11 @@ function initScaleUpScroll() {
 
 /* =========================================
    FADE SYSTEM
+   .fade-scale only. .fade-in is owned by the animation repo
+   (animation.js / animation.css, inside .fade-section).
 ========================================= */
 function initFadeSystem() {
-  const items = document.querySelectorAll('.fade-in, .fade-scale');
+  const items = document.querySelectorAll('.fade-scale');
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry, i) => {
