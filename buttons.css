@@ -1,0 +1,249 @@
+/* ========================================
+   BACK TO TOP BUTTON
+   ======================================== */
+
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+
+  display: flex;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+
+  color: red;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px);
+
+  transition:
+    opacity 250ms ease,
+    visibility 250ms ease,
+    transform 250ms ease,
+    color 200ms ease,
+    background-color 200ms ease;
+}
+
+.back-to-top svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+}
+
+/* Shown after the visitor scrolls down */
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  fill: red;
+  background-color: #C9C6C2;
+}
+
+.back-to-top:focus-visible {
+  outline: 3px solid rgba(29, 29, 29, 0.35);
+  outline-offset: 4px;
+}
+
+/* Mobile positioning */
+@media screen and (max-width: 767px) {
+  .back-to-top {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* Removes animation for reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: none;
+  }
+}
+
+/* ========================================
+   MEMBERSHIP LOGO — HOVER EFFECT
+   ======================================== */
+
+.logos-memberships {
+  position: relative;
+  transition:
+    transform 300ms ease,
+    box-shadow 300ms ease;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .logos-memberships:hover {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 4px 8px rgba(17, 17, 17, 0.12);
+  }
+}
+
+/* Matches the hover effect when the block is keyboard-focused */
+.logos-memberships:focus-visible {
+  transform: translateY(-6px) scale(1.025);
+  box-shadow: 0 16px 32px rgba(17, 17, 17, 0.12);
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* Respects reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .logos-memberships {
+    transition: box-shadow 200ms ease;
+  }
+
+  .logos-memberships:hover,
+  .logos-memberships:focus-visible {
+    transform: none;
+  }
+}
+
+/* ========================================
+   GOLD GLOW BUTTONS
+   Use glow-btn-dark on dark sections or glow-btn-light on light sections.
+   Shared definitions match cards.css and allow independent loading.
+   ======================================== */
+
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes glow-spin {
+  to { --glow-angle: 360deg; }
+}
+
+/* Dark variant: base and traveling gold ring */
+.glow-btn-dark {
+  position: relative;
+  border-radius: 7px;
+  transition: box-shadow .4s ease, border-color .4s ease;
+}
+
+.glow-btn-dark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(197, 97, 41, 0.2) 0%,
+    #C56129 20%,
+    #F5AD59 35%,
+    #C56129 50%,
+    rgba(197, 97, 41, 0.2) 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+  animation: glow-spin 2.5s linear infinite paused;
+}
+
+/* Dark variant: hover and keyboard focus */
+@media (hover: hover) {
+  .glow-btn-dark:hover::before {
+    opacity: 1;
+    animation-play-state: running;
+  }
+  .glow-btn-dark:hover {
+    border-color: rgba(197, 97, 41, 0.6);
+    box-shadow: 0 0 14px rgba(245, 173, 89, 0.32), 0 0 32px rgba(197, 97, 41, 0.18);
+  }
+}
+
+.glow-btn-dark:focus-visible::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+.glow-btn-dark:focus-visible {
+  border-color: rgba(197, 97, 41, 0.6);
+  box-shadow: 0 0 14px rgba(245, 173, 89, 0.32), 0 0 32px rgba(197, 97, 41, 0.18);
+}
+
+/* Dark variant: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-btn-dark::before { animation: none; }
+}
+
+/* Light variant: base and traveling gold ring */
+.glow-btn-light {
+  position: relative;
+  border-radius: 7px;
+  background-color: #2C2C2C;
+  color: #FFFCF8;
+  border: 1px solid #2C2C2C;
+  transition: box-shadow .4s ease;
+}
+
+.glow-btn-light::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(197, 97, 41, 0.15) 0%,
+    #C56129 20%,
+    #F5AD59 35%,
+    #C56129 50%,
+    rgba(197, 97, 41, 0.15) 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+  animation: glow-spin 2.5s linear infinite paused;
+}
+
+/* Light variant: hover and keyboard focus */
+@media (hover: hover) {
+  .glow-btn-light:hover::before {
+    opacity: 1;
+    animation-play-state: running;
+  }
+  .glow-btn-light:hover {
+    box-shadow: 0 6px 18px rgba(197, 97, 41, 0.22), 0 2px 6px rgba(44, 44, 44, 0.12);
+  }
+}
+
+.glow-btn-light:focus-visible::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+.glow-btn-light:focus-visible {
+  outline: 2px solid #C56129;
+  outline-offset: 3px;
+  box-shadow: 0 6px 18px rgba(197, 97, 41, 0.22), 0 2px 6px rgba(44, 44, 44, 0.12);
+}
+
+/* Light variant: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-btn-light::before { animation: none; }
+}
