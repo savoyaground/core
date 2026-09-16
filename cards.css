@@ -1,0 +1,64 @@
+/* ==========================================================
+   HOVER CARDS
+   ========================================================== */
+
+/* Shared animation setup for gold glow effects. */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.glow-card {
+  position: relative;
+  transition: box-shadow .5s ease, border-color .5s ease;
+}
+
+/* Traveling gold ring */
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1.5px; /* ring thickness */
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(197, 97, 41, 0.2) 0%,
+    #C56129 20%,
+    #F5AD59 35%,
+    #C56129 50%,
+    rgba(197, 97, 41, 0.2) 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+  animation: glow-spin 3.5s linear infinite paused;
+}
+
+@keyframes glow-spin {
+  to { --glow-angle: 360deg; }
+}
+
+/* Hover (mouse devices) and keyboard focus */
+@media (hover: hover) {
+  .glow-card:hover::before { opacity: 1; animation-play-state: running; }
+  .glow-card:hover {
+    border-color: rgba(197, 97, 41, 0.6);
+    box-shadow: 0 0 24px rgba(245, 173, 89, 0.28), 0 0 60px rgba(197, 97, 41, 0.16);
+  }
+}
+.glow-card:focus-within::before { opacity: 1; animation-play-state: running; }
+.glow-card:focus-within {
+  border-color: rgba(197, 97, 41, 0.6);
+  box-shadow: 0 0 24px rgba(245, 173, 89, 0.28), 0 0 60px rgba(197, 97, 41, 0.16);
+}
+
+/* Respect reduced-motion settings: static gold ring, no spin */
+@media (prefers-reduced-motion: reduce) {
+  .glow-card::before { animation: none; }
+}
