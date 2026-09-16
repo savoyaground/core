@@ -1,0 +1,47 @@
+/* ==================================================
+   Parallax Image
+   Place .parallax-img directly inside .parallax-container.
+   Set the container height or aspect ratio in Webflow as needed.
+   ================================================== */
+
+.parallax-container {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.parallax-container > .parallax-img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Keep a static image unless scroll-driven animations are supported.
+   The oversized image provides room to move without exposing gaps. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .parallax-container {
+      view-timeline-name: --parallax-image;
+      view-timeline-axis: block;
+    }
+
+    .parallax-container > .parallax-img {
+      top: -10%;
+      bottom: auto;
+      height: 120%;
+      animation: parallax-image-scroll linear both;
+      animation-timeline: --parallax-image;
+      animation-range: cover;
+    }
+  }
+}
+
+@keyframes parallax-image-scroll {
+  from { transform: translateY(-8%); }
+  to { transform: translateY(8%); }
+}
