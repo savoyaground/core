@@ -180,10 +180,6 @@
   --btn-radius: 7px; /* only used to round the halo */
   position: relative;
   isolation: isolate;
-  /* A border set in Webflow keeps its space but turns invisible here, so
-     the Designer can show a placeholder keyline and this CSS paints the
-     real one on top at runtime. */
-  border-color: transparent;
   /* No border-radius here: the corner radius set in Webflow is kept, and
      the keyline, ring, and halo follow it. Set --btn-radius to match it
      only if the halo's soft corners look off. */
@@ -192,6 +188,21 @@
     transform .45s var(--glow-ease),
     box-shadow .45s var(--glow-ease),
     color .45s var(--glow-ease);
+}
+
+/* A border styled in Webflow is a Designer placeholder: its width still
+   holds the layout, but its color is hidden here, so the keyline, ring,
+   and halo are the only edges on the published site. !important is what
+   beats a border set on a Webflow combo class. */
+.btn-dark:not(.no-glow),
+.btn-gradient:not(.no-glow),
+.btn-keyline:not(.no-glow),
+.glow-btn-dark:not(.no-glow),
+.glow-btn-light:not(.no-glow),
+.glow-btn-gradient:not(.no-glow),
+.glow-btn-primary:not(.no-glow),
+.glow-btn-keyline:not(.no-glow) {
+  border-color: transparent !important;
 }
 
 @media (hover: hover) {
