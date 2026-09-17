@@ -171,7 +171,7 @@
   --comet-speed: 1.8s;
   --head-width: 3px;
   --tail-width: 1px;
-  --btn-fill: #2C2C2C;
+  --btn-fill: #141313;
   --mx: 50%;  /* pointer position, set by glow-buttons.js */
   --my: 100%;
   --spot: 0;  /* pointer glow strength, 0 at rest and 1 on hover */
