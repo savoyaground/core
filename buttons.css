@@ -120,9 +120,11 @@
    A gold comet orbits the black button: a thick, bright head in the
    design system gold gradient (#C56129 to #F5AD59, as in
    .text-gradient-gold), a thin tail that runs 70% of the way around,
-   and a halo that follows the head. At rest the comet runs softly.
-   On hover it brightens, the button scales up, and a copper glow
-   follows the pointer inside the button.
+   and a halo that follows the head. On hover the comet appears, the
+   button scales up, and a warm gold glow follows the pointer inside.
+
+   Add the combo class is-live (partner pages) to keep the comet
+   running softly at rest as well.
 
    Pure CSS apart from the pointer glow, which needs glow-buttons.js
    (add it to core.js once; it covers every page and duplicate).
@@ -235,10 +237,10 @@
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
-  opacity: var(--ring-rest);
+  opacity: 0;
   pointer-events: none;
   transition: opacity .35s ease;
-  animation: glow-spin var(--comet-speed) linear infinite;
+  animation: glow-spin var(--comet-speed) linear infinite paused;
 }
 
 /* Halo that rides with the head, drawn outside the button only */
@@ -263,10 +265,22 @@
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
-  opacity: var(--halo-rest);
+  opacity: 0;
   pointer-events: none;
   transition: opacity .35s ease;
-  animation: glow-spin var(--comet-speed) linear infinite;
+  animation: glow-spin var(--comet-speed) linear infinite paused;
+}
+
+/* is-live: comet runs softly at rest (partner pages) */
+.glow-btn-dark.is-live::before,
+.glow-btn-light.is-live::before {
+  opacity: var(--ring-rest);
+  animation-play-state: running;
+}
+.glow-btn-dark.is-live::after,
+.glow-btn-light.is-live::after {
+  opacity: var(--halo-rest);
+  animation-play-state: running;
 }
 
 /* Hover (mouse devices) */
@@ -278,9 +292,9 @@
     box-shadow: inset 0 0 0 1px var(--hairline), var(--lift);
   }
   .glow-btn-dark:hover::before,
-  .glow-btn-light:hover::before { opacity: 1; }
+  .glow-btn-light:hover::before { opacity: 1; animation-play-state: running; }
   .glow-btn-dark:hover::after,
-  .glow-btn-light:hover::after { opacity: var(--halo-hover); }
+  .glow-btn-light:hover::after { opacity: var(--halo-hover); animation-play-state: running; }
 }
 
 /* Pressed: settles back slightly */
@@ -297,9 +311,9 @@
   outline-offset: 4px;
 }
 .glow-btn-dark:focus-visible::before,
-.glow-btn-light:focus-visible::before { opacity: 1; }
+.glow-btn-light:focus-visible::before { opacity: 1; animation-play-state: running; }
 .glow-btn-dark:focus-visible::after,
-.glow-btn-light:focus-visible::after { opacity: var(--halo-hover); }
+.glow-btn-light:focus-visible::after { opacity: var(--halo-hover); animation-play-state: running; }
 
 /* Reduced motion: comet holds still and no scale; pointer glow still responds */
 @media (prefers-reduced-motion: reduce) {
@@ -318,30 +332,43 @@
 }
 
 /* ========================================
-   GLOW PRIMARY BUTTON (COPPER)
-   Light gold glow that follows the pointer inside the button, with
-   the same scale up as glow-btn-dark and glow-btn-light. Keeps the fill color set
-   on the Webflow button class.
+   GLOW PRIMARY BUTTON (GOLD GRADIENT)
+   Soft light that follows the pointer inside the gold gradient button,
+   with the same scale up as glow-btn-dark and glow-btn-light.
+   The glow sits on its own layer, so the button's gradient fill from
+   Webflow is never replaced, even if the gradient is on an inner element.
 
    Webflow: add the combo class glow-btn-primary to the button.
-   Uses the same script as the gold glow buttons (glow-buttons.js).
+   Uses the same script as the gold glow buttons (buttons.js).
    Reuses --spot defined above.
    ======================================== */
 
 .glow-btn-primary {
-  --mx: 50%;
+  --mx: 50%;  /* pointer position, set by buttons.js */
   --my: 100%;
-  --spot: 0;
+  --spot: 0;  /* glow strength, 0 at rest and 1 on hover */
   position: relative;
-  border-radius: 7px;
-  background-image:
-    radial-gradient(110px circle at var(--mx) var(--my),
-      rgb(255 222 170 / calc(0.45 * var(--spot))) 0%,
-      rgb(245 173 89 / calc(0.25 * var(--spot))) 45%,
-      rgb(245 173 89 / 0) 75%);
+  isolation: isolate; /* keeps the glow blend inside the button */
   transition:
     --spot .35s ease,
     transform .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Pointer glow layer. It sits on top and lightens with a screen blend,
+   so it shows whether the gradient is on the button or on an element
+   inside it, and the white label stays white. */
+.glow-btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  background: radial-gradient(110px circle at var(--mx) var(--my),
+    rgb(255 240 214 / calc(0.40 * var(--spot))) 0%,
+    rgb(255 222 170 / calc(0.20 * var(--spot))) 45%,
+    rgb(255 222 170 / 0) 75%);
+  pointer-events: none;
 }
 
 @media (hover: hover) {
