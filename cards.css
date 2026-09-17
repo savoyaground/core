@@ -1,64 +1,392 @@
-/* ==========================================================
-   HOVER CARDS
-   ========================================================== */
+/* ========================================
+   BACK TO TOP BUTTON
+   ======================================== */
 
-/* Shared animation setup for gold glow effects. */
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+
+  display: flex;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+
+  color: red;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px);
+
+  transition:
+    opacity 250ms ease,
+    visibility 250ms ease,
+    transform 250ms ease,
+    color 200ms ease,
+    background-color 200ms ease;
+}
+
+.back-to-top svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+}
+
+/* Shown after the visitor scrolls down */
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  fill: red;
+  background-color: #C9C6C2;
+}
+
+.back-to-top:focus-visible {
+  outline: 3px solid rgba(29, 29, 29, 0.35);
+  outline-offset: 4px;
+}
+
+/* Mobile positioning */
+@media screen and (max-width: 767px) {
+  .back-to-top {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* Removes animation for reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: none;
+  }
+}
+
+/* ========================================
+   MEMBERSHIP LOGO — HOVER EFFECT
+   ======================================== */
+
+.logos-memberships {
+  position: relative;
+  transition:
+    transform 300ms ease,
+    box-shadow 300ms ease;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .logos-memberships:hover {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 4px 8px rgba(17, 17, 17, 0.12);
+  }
+}
+
+/* Matches the hover effect when the block is keyboard-focused */
+.logos-memberships:focus-visible {
+  transform: translateY(-6px) scale(1.025);
+  box-shadow: 0 16px 32px rgba(17, 17, 17, 0.12);
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* Respects reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .logos-memberships {
+    transition: box-shadow 200ms ease;
+  }
+
+  .logos-memberships:hover,
+  .logos-memberships:focus-visible {
+    transform: none;
+  }
+}
+
+/* ========================================
+   GOLD GLOW BUTTONS
+   Use glow-btn-dark on dark sections or glow-btn-light on light sections.
+
+   A gold comet orbits the black button: a thick, bright head in the
+   design system gold gradient (#C56129 to #F5AD59, as in
+   .text-gradient-gold), a thin tail that runs 70% of the way around,
+   and a halo that follows the head. On hover the comet appears, the
+   button scales up, and a warm gold glow follows the pointer inside.
+
+   Add the combo class is-live (partner pages) to keep the comet
+   running softly at rest as well.
+
+   Pure CSS apart from the pointer glow, which needs glow-buttons.js
+   (add it to core.js once; it covers every page and duplicate).
+   Shared definitions match cards.css and allow independent loading.
+   Tuning: --comet-speed (lap time), --head-width (head thickness).
+   ======================================== */
+
 @property --glow-angle {
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
 }
 
-.glow-card {
-  position: relative;
-  transition: box-shadow .5s ease, border-color .5s ease;
+@keyframes glow-spin {
+  to { --glow-angle: 360deg; }
 }
 
-/* Traveling gold ring */
-.glow-card::before {
+@property --spot {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Section tuning */
+.glow-btn-dark {
+  --ring-rest: .85;
+  --halo-rest: .3;
+  --halo-hover: 1;
+  --hairline: rgba(255, 252, 248, 0.14);
+  --lift: 0 0 0 0 transparent;
+}
+
+.glow-btn-light {
+  --ring-rest: .85;
+  --halo-rest: .15;
+  --halo-hover: .6;
+  --hairline: rgba(44, 44, 44, 0);
+  --lift: 0 6px 18px rgba(197, 97, 41, 0.22), 0 2px 6px rgba(44, 44, 44, 0.12);
+}
+
+/* Shared base */
+.glow-btn-dark,
+.glow-btn-light {
+  --comet-speed: 1.8s;
+  --head-width: 3px;
+  --tail-width: 1px;
+  --btn-fill: #2C2C2C;
+  --mx: 50%;  /* pointer position, set by glow-buttons.js */
+  --my: 100%;
+  --spot: 0;  /* pointer glow strength, 0 at rest and 1 on hover */
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 7px;
+  background-color: var(--btn-fill);
+  background-image:
+    radial-gradient(110px circle at var(--mx) var(--my),
+      rgb(245 173 89 / calc(0.30 * var(--spot))) 0%,
+      rgb(197 97 41 / calc(0.16 * var(--spot))) 45%,
+      rgb(197 97 41 / 0) 75%),
+    linear-gradient(180deg, rgba(255, 252, 248, 0.07) 0%, rgba(255, 252, 248, 0) 55%);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: #FFFCF8;
+  transition:
+    --spot .35s ease,
+    transform .3s cubic-bezier(.2, .8, .2, 1),
+    box-shadow .35s ease;
+}
+
+/* Comet ring. Layers, top to bottom:
+   1. head: full ring thickness, short bright arc
+   2. cover: repeats the fill, highlight, and pointer glow so the tail
+      only shows in the thin outer line
+   3. tail: long arc, visible in the thin outer line only */
+.glow-btn-dark::before,
+.glow-btn-light::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 2;
-  padding: 1.5px; /* ring thickness */
+  border: var(--tail-width) solid transparent;
+  padding: calc(var(--head-width) - var(--tail-width));
   border-radius: inherit;
-  background: conic-gradient(
-    from var(--glow-angle),
-    rgba(197, 97, 41, 0.2) 0%,
-    #C56129 20%,
-    #F5AD59 35%,
-    #C56129 50%,
-    rgba(197, 97, 41, 0.2) 70%
-  );
+  background:
+    conic-gradient(
+      from var(--glow-angle),
+      rgba(197, 97, 41, 0) 0%,
+      rgba(197, 97, 41, 0) 80%,
+      #C56129 90%,
+      #F5AD59 97%,
+      rgba(245, 173, 89, 0) 98.5%
+    ) border-box,
+    radial-gradient(110px circle at var(--mx) var(--my),
+      rgb(245 173 89 / calc(0.30 * var(--spot))) 0%,
+      rgb(197 97 41 / calc(0.16 * var(--spot))) 45%,
+      rgb(197 97 41 / 0) 75%) border-box padding-box,
+    linear-gradient(180deg, rgba(255, 252, 248, 0.07) 0%, rgba(255, 252, 248, 0) 55%) border-box padding-box,
+    linear-gradient(var(--btn-fill), var(--btn-fill)) padding-box,
+    conic-gradient(
+      from var(--glow-angle),
+      rgba(197, 97, 41, 0) 0%,
+      rgba(197, 97, 41, 0) 27%,
+      rgba(197, 97, 41, 0.35) 32%,
+      #C56129 48%,
+      #DD9058 75%,
+      #F5AD59 97%,
+      rgba(245, 173, 89, 0) 98.5%
+    ) border-box;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .5s ease;
-  animation: glow-spin 3.5s linear infinite paused;
+  transition: opacity .35s ease;
+  animation: glow-spin var(--comet-speed) linear infinite paused;
 }
 
-@keyframes glow-spin {
-  to { --glow-angle: 360deg; }
+/* Halo that rides with the head, drawn outside the button only */
+.glow-btn-dark::after,
+.glow-btn-light::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  z-index: 1;
+  padding: 20px;
+  border-radius: 27px; /* 7px button radius + 20px */
+  background: conic-gradient(
+    from var(--glow-angle),
+    rgba(197, 97, 41, 0) 0%,
+    rgba(197, 97, 41, 0) 70%,
+    rgba(197, 97, 41, 0.5) 88%,
+    #F5AD59 97%,
+    rgba(245, 173, 89, 0) 99%
+  ) content-box;
+  filter: blur(8px);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+  animation: glow-spin var(--comet-speed) linear infinite paused;
 }
 
-/* Hover (mouse devices) and keyboard focus */
+/* is-live: comet runs softly at rest (partner pages) */
+.glow-btn-dark.is-live::before,
+.glow-btn-light.is-live::before {
+  opacity: var(--ring-rest);
+  animation-play-state: running;
+}
+.glow-btn-dark.is-live::after,
+.glow-btn-light.is-live::after {
+  opacity: var(--halo-rest);
+  animation-play-state: running;
+}
+
+/* Hover (mouse devices) */
 @media (hover: hover) {
-  .glow-card:hover::before { opacity: 1; animation-play-state: running; }
-  .glow-card:hover {
-    border-color: rgba(197, 97, 41, 0.6);
-    box-shadow: 0 0 24px rgba(245, 173, 89, 0.28), 0 0 60px rgba(197, 97, 41, 0.16);
+  .glow-btn-dark:hover,
+  .glow-btn-light:hover {
+    --spot: 1;
+    transform: scale(1.04);
+    box-shadow: inset 0 0 0 1px var(--hairline), var(--lift);
   }
-}
-.glow-card:focus-within::before { opacity: 1; animation-play-state: running; }
-.glow-card:focus-within {
-  border-color: rgba(197, 97, 41, 0.6);
-  box-shadow: 0 0 24px rgba(245, 173, 89, 0.28), 0 0 60px rgba(197, 97, 41, 0.16);
+  .glow-btn-dark:hover::before,
+  .glow-btn-light:hover::before { opacity: 1; animation-play-state: running; }
+  .glow-btn-dark:hover::after,
+  .glow-btn-light:hover::after { opacity: var(--halo-hover); animation-play-state: running; }
 }
 
-/* Respect reduced-motion settings: static gold ring, no spin */
+/* Pressed: settles back slightly */
+.glow-btn-dark:active,
+.glow-btn-light:active { transform: scale(1.01); }
+
+/* Keyboard focus: same as hover, glow sits at the bottom center */
+.glow-btn-dark:focus-visible,
+.glow-btn-light:focus-visible {
+  --spot: 1;
+  transform: scale(1.04);
+  box-shadow: inset 0 0 0 1px var(--hairline), var(--lift);
+  outline: 2px solid #C56129;
+  outline-offset: 4px;
+}
+.glow-btn-dark:focus-visible::before,
+.glow-btn-light:focus-visible::before { opacity: 1; animation-play-state: running; }
+.glow-btn-dark:focus-visible::after,
+.glow-btn-light:focus-visible::after { opacity: var(--halo-hover); animation-play-state: running; }
+
+/* Reduced motion: comet holds still and no scale; pointer glow still responds */
 @media (prefers-reduced-motion: reduce) {
-  .glow-card::before { animation: none; }
+  .glow-btn-dark::before,
+  .glow-btn-dark::after,
+  .glow-btn-light::before,
+  .glow-btn-light::after { animation: none; }
+  .glow-btn-dark,
+  .glow-btn-dark:hover,
+  .glow-btn-dark:active,
+  .glow-btn-dark:focus-visible,
+  .glow-btn-light,
+  .glow-btn-light:hover,
+  .glow-btn-light:active,
+  .glow-btn-light:focus-visible { transform: none; }
+}
+
+/* ========================================
+   GLOW PRIMARY BUTTON (GOLD GRADIENT)
+   Soft light that follows the pointer inside the gold gradient button,
+   with the same scale up as glow-btn-dark and glow-btn-light.
+   The glow sits on its own layer, so the button's gradient fill from
+   Webflow is never replaced, even if the gradient is on an inner element.
+
+   Webflow: add the combo class glow-btn-primary to the button.
+   Uses the same script as the gold glow buttons (buttons.js).
+   Reuses --spot defined above.
+   ======================================== */
+
+.glow-btn-primary {
+  --mx: 50%;  /* pointer position, set by buttons.js */
+  --my: 100%;
+  --spot: 0;  /* glow strength, 0 at rest and 1 on hover */
+  position: relative;
+  isolation: isolate; /* keeps the glow blend inside the button */
+  transition:
+    --spot .35s ease,
+    transform .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Pointer glow layer. It sits on top and lightens with a screen blend,
+   so it shows whether the gradient is on the button or on an element
+   inside it, and the white label stays white. */
+.glow-btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  background: radial-gradient(110px circle at var(--mx) var(--my),
+    rgb(255 240 214 / calc(0.40 * var(--spot))) 0%,
+    rgb(255 222 170 / calc(0.20 * var(--spot))) 45%,
+    rgb(255 222 170 / 0) 75%);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .glow-btn-primary:hover { --spot: 1; transform: scale(1.04); }
+}
+
+.glow-btn-primary:active { transform: scale(1.01); }
+
+.glow-btn-primary:focus-visible {
+  --spot: 1;
+  transform: scale(1.04);
+  outline: 2px solid #F5AD59;
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-btn-primary,
+  .glow-btn-primary:hover,
+  .glow-btn-primary:active,
+  .glow-btn-primary:focus-visible { transform: none; }
 }
