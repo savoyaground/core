@@ -126,8 +126,8 @@
    Add the combo class is-live (partner pages) to keep the comet
    running softly at rest as well.
 
-   buttons.js adds the pointer glow and keeps the comet at a steady
-   speed on any button width. Without it, the comet still spins.
+   Pure CSS apart from the pointer glow, which needs glow-buttons.js
+   (add it to core.js once; it covers every page and duplicate).
    Shared definitions match cards.css and allow independent loading.
    Tuning: --comet-speed (lap time), --head-width (head thickness),
    --glow-ease (hover easing).
@@ -169,12 +169,12 @@
 /* Shared base */
 .glow-btn-dark,
 .glow-btn-light {
-  --comet-speed: 2.5s;
+  --comet-speed: 1.8s;
   --glow-ease: cubic-bezier(.37, 0, .63, 1); /* ease-in-out sine */
   --head-width: 3px;
   --tail-width: 1px;
   --btn-fill: #141313;
-  --mx: 50%;  /* pointer position, set by buttons.js */
+  --mx: 50%;  /* pointer position, set by glow-buttons.js */
   --my: 100%;
   --spot: 0;  /* pointer glow strength, 0 at rest and 1 on hover */
   position: relative;
@@ -242,7 +242,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity .45s var(--glow-ease);
-  animation: var(--orbit-anim, glow-spin) var(--comet-speed) linear infinite paused; /* orbit set by buttons.js */
+  animation: glow-spin var(--comet-speed) linear infinite paused;
 }
 
 /* Halo that rides with the head, drawn outside the button only */
@@ -270,7 +270,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity .45s var(--glow-ease);
-  animation: var(--orbit-anim, glow-spin) var(--comet-speed) linear infinite paused; /* orbit set by buttons.js */
+  animation: glow-spin var(--comet-speed) linear infinite paused;
 }
 
 /* is-live: comet runs softly at rest (partner pages) */
