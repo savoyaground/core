@@ -126,10 +126,11 @@
    Add the combo class is-live (partner pages) to keep the comet
    running softly at rest as well.
 
-   Pure CSS apart from the pointer glow, which needs glow-buttons.js
-   (add it to core.js once; it covers every page and duplicate).
+   buttons.js adds the pointer glow and keeps the comet at a steady
+   speed on any button width. Without it, the comet still spins.
    Shared definitions match cards.css and allow independent loading.
-   Tuning: --comet-speed (lap time), --head-width (head thickness).
+   Tuning: --comet-speed (lap time), --head-width (head thickness),
+   --glow-ease (hover easing).
    ======================================== */
 
 @property --glow-angle {
@@ -168,11 +169,12 @@
 /* Shared base */
 .glow-btn-dark,
 .glow-btn-light {
-  --comet-speed: 1.8s;
+  --comet-speed: 2.5s;
+  --glow-ease: cubic-bezier(.37, 0, .63, 1); /* ease-in-out sine */
   --head-width: 3px;
   --tail-width: 1px;
   --btn-fill: #141313;
-  --mx: 50%;  /* pointer position, set by glow-buttons.js */
+  --mx: 50%;  /* pointer position, set by buttons.js */
   --my: 100%;
   --spot: 0;  /* pointer glow strength, 0 at rest and 1 on hover */
   position: relative;
@@ -189,9 +191,9 @@
   box-shadow: inset 0 0 0 1px var(--hairline);
   color: #FFFCF8;
   transition:
-    --spot .35s ease,
-    transform .3s cubic-bezier(.2, .8, .2, 1),
-    box-shadow .35s ease;
+    --spot .45s var(--glow-ease),
+    transform .45s var(--glow-ease),
+    box-shadow .45s var(--glow-ease);
 }
 
 /* Comet ring. Layers, top to bottom:
@@ -239,8 +241,8 @@
   mask-composite: exclude;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .35s ease;
-  animation: glow-spin var(--comet-speed) linear infinite paused;
+  transition: opacity .45s var(--glow-ease);
+  animation: var(--orbit-anim, glow-spin) var(--comet-speed) linear infinite paused; /* orbit set by buttons.js */
 }
 
 /* Halo that rides with the head, drawn outside the button only */
@@ -267,8 +269,8 @@
   mask-composite: exclude;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .35s ease;
-  animation: glow-spin var(--comet-speed) linear infinite paused;
+  transition: opacity .45s var(--glow-ease);
+  animation: var(--orbit-anim, glow-spin) var(--comet-speed) linear infinite paused; /* orbit set by buttons.js */
 }
 
 /* is-live: comet runs softly at rest (partner pages) */
@@ -347,11 +349,12 @@
   --mx: 50%;  /* pointer position, set by buttons.js */
   --my: 100%;
   --spot: 0;  /* glow strength, 0 at rest and 1 on hover */
+  --glow-ease: cubic-bezier(.37, 0, .63, 1); /* ease-in-out sine */
   position: relative;
   isolation: isolate; /* keeps the glow blend inside the button */
   transition:
-    --spot .35s ease,
-    transform .3s cubic-bezier(.2, .8, .2, 1);
+    --spot .45s var(--glow-ease),
+    transform .45s var(--glow-ease);
 }
 
 /* Pointer glow layer. It sits on top and lightens with a screen blend,
