@@ -122,9 +122,10 @@
      btn-gradient  gold gradient fill, light follows the pointer
      btn-keyline   transparent, gold gradient keyline
 
-   A border styled in Webflow shows in the Designer and disappears on
-   the published site; its width still holds the layout, so set it to
-   1.5px to match the keyline.
+   Corner radius and border width come from Webflow. A border styled
+   there shows in the Designer and turns invisible on the published
+   site, while its width still holds the layout, so set it to 1.5px to
+   match the keyline.
 
    Modifiers: is-light (button sits on a light section)
               is-live (comet runs at rest, partner pages)
@@ -176,13 +177,16 @@
   --my: 100%;
   --spot: 0;  /* pointer glow strength, 0 at rest and 1 on hover */
   --lift: 0 0 0 0 transparent;
+  --btn-radius: 7px; /* only used to round the halo */
   position: relative;
   isolation: isolate;
   /* A border set in Webflow keeps its space but turns invisible here, so
      the Designer can show a placeholder keyline and this CSS paints the
      real one on top at runtime. */
   border-color: transparent;
-  border-radius: 7px;
+  /* No border-radius here: the corner radius set in Webflow is kept, and
+     the keyline, ring, and halo follow it. Set --btn-radius to match it
+     only if the halo's soft corners look off. */
   transition:
     --spot .45s var(--glow-ease),
     transform .45s var(--glow-ease),
@@ -317,7 +321,7 @@
   inset: -20px;
   z-index: 1;
   padding: 20px;
-  border-radius: 27px; /* 7px button radius + 20px */
+  border-radius: calc(var(--btn-radius) + 20px);
   background: conic-gradient(
     from var(--glow-angle),
     rgba(197, 97, 41, 0) 0%,
