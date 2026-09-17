@@ -122,6 +122,10 @@
      btn-gradient  gold gradient fill, light follows the pointer
      btn-keyline   transparent, gold gradient keyline
 
+   A border styled in Webflow shows in the Designer and disappears on
+   the published site; its width still holds the layout, so set it to
+   1.5px to match the keyline.
+
    Modifiers: is-light (button sits on a light section)
               is-live (comet runs at rest, partner pages)
               no-glow (plain button, effect off)
@@ -174,7 +178,10 @@
   --lift: 0 0 0 0 transparent;
   position: relative;
   isolation: isolate;
-  border: 0;
+  /* A border set in Webflow keeps its space but turns invisible here, so
+     the Designer can show a placeholder keyline and this CSS paints the
+     real one on top at runtime. */
+  border-color: transparent;
   border-radius: 7px;
   transition:
     --spot .45s var(--glow-ease),
