@@ -1,12 +1,12 @@
 /* ========================================
    GOLD GLOW BUTTONS: POINTER GLOW
-   Moves the inner glow of .glow-btn-dark, .glow-btn-light, and
-   .glow-btn-primary to follow the pointer. One listener on the document,
+   Moves the inner glow of .btn-dark, .btn-gradient, and .btn-keyline
+   (and the older glow-btn-* names) to follow the pointer. One listener on the document,
    so it works on every page and on duplicated pages with no Webflow
    interactions.
    ======================================== */
 (function () {
-  var SELECTOR = '.glow-btn-dark, .glow-btn-light, .glow-btn-primary';
+  var SELECTOR = '.btn-dark, .btn-gradient, .btn-keyline, .glow-btn-dark, .glow-btn-light, .glow-btn-gradient, .glow-btn-primary, .glow-btn-keyline';
   function track(e) {
     var btn = e.target.closest && e.target.closest(SELECTOR);
     if (!btn) return;
@@ -30,7 +30,7 @@
    falls back to the plain spin.
    ======================================== */
 (function () {
-  var SELECTOR = '.glow-btn-dark, .glow-btn-light';
+  var SELECTOR = '.btn-dark, .btn-gradient, .btn-keyline, .glow-btn-dark, .glow-btn-light, .glow-btn-gradient, .glow-btn-primary, .glow-btn-keyline';
   var HEAD = 0.97 * 360; /* where the head sits in the ring gradient, in degrees */
   var STEPS = 64;
   var made = {};
