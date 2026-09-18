@@ -129,6 +129,7 @@
 
    Modifiers: is-light (button sits on a light section)
               is-white (keyline button: white keyline, gold head)
+              is-black (keyline button: black keyline, copper head)
               is-live (comet runs at rest, partner pages)
               no-glow (plain button, effect off)
 
@@ -201,8 +202,14 @@
   --keyline-head: #F5AD59;
 }
 
-.btn-keyline.is-white.is-light,
-.glow-btn-keyline.is-white.is-light { --keyline-ink: #141313; }
+/* is-black: black keyline for light sections and light photography */
+.btn-keyline.is-black,
+.glow-btn-keyline.is-black {
+  --keyline-a: #141313;
+  --keyline-b: rgba(20, 19, 19, 0.45);
+  --keyline-ink: #141313;
+  --keyline-head: #C56129;
+}
 
 
 /* A border styled in Webflow is a Designer placeholder: its width still
