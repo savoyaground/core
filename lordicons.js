@@ -1,30 +1,3 @@
-/* ==========================================================
-   SAVOYA LORDICONS
-   One global script for every page.
- 
-   Two ways to set an icon (use either, or both):
- 
-   1. Webflow attributes on the <lord-icon> element
-        data-icon="wyxsbjgd"            (required)
-        data-icon-theme="gold"          (optional: gold | dark | light)
-        data-icon-trigger="hover"       (optional, default "in")
- 
-   2. A small page config, placed BEFORE this script:
-        <script>
-          window.SavoyaIcons = {
-            theme: "gold",
-            blocks: {
-              "transfer-icon-block-1": ["wyxsbjgd", "hsnymvfu"],
-              "transfer-icon-block-2": { theme: "dark", icons: ["jprswwur"] }
-            }
-          };
-        </script>
-      Icons inside each block are matched in order:
-      the 1st lord-icon.lordicon-dynamic gets the 1st ID, and so on.
- 
-   This script also loads lordicon.js, so you don't need that tag.
-   ========================================================== */
- 
 (() => {
   if (window.SavoyaLordicons) return;
  
