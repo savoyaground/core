@@ -1,10 +1,18 @@
-<style>
-
 /* =========================================
    CORE RESET
 ========================================= */
 body {
   margin: 0;
+}
+
+/* Nothing can push the page sideways (e.g. an element set to 100vw, which is
+   wider than the page when a scrollbar shows). "clip" only cuts off the sides:
+   vertical scrolling and the sticky navbar keep working, which
+   "overflow-x: hidden" on the body would break. Leave Overflow on Visible for
+   the body classes in Webflow; Webflow can only set both axes at once. */
+html,
+body {
+  overflow-x: clip;
 }
 
 /* =========================================
@@ -213,5 +221,3 @@ body {
 .lordicon-dynamic {
   transform: scale(1.1);
 }
-
-</style>
