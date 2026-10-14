@@ -7,6 +7,8 @@
  *   left to right, and its matching category column switches to the dark
  *   active state (black panel, white text, light grey arrows). Hovering a
  *   column does the reverse: it activates that column and its top link.
+ *   Hovering an item in the active column gives it a white background; its
+ *   text shifts right as a left arrow slides in and the right arrow slides out.
  *   First click/tap on a tab while the menu is closed opens it; a click while
  *   open follows the tab's link. Escape, outside click, or leaving the nav closes it.
  * Tablet/mobile (<= 991px): the hamburger opens a full-height drawer. Column
@@ -67,14 +69,38 @@
     // Pieces of a column that switch to the dark "active" treatment.
     var COL_PARTS = '.nc1-col-head, .nc1-col-label, .nc1-col-rule, .nc1-link, .nc1-link-text, .nc1-link-arrow';
 
+    // Item hover inside the active (black) column: white pill, text nudges
+    // right, right arrow slides out, left arrow slides in.
+    var LINK_PARTS = '.nc1-link-text, .nc1-link-arrow, .nc1-link-arrow-in';
+
+    function setLinkHover(link, on) {
+      toggle(link, 'nc1-hover', on);
+      $$(LINK_PARTS, link).forEach(function (el) { toggle(el, 'nc1-hover', on); });
+    }
+
     function setActiveCol(index) {
       var desktop = !MQ_MOBILE.matches;
       cols.forEach(function (col, i) {
         var on = desktop && i === index;
         toggle(col, 'nc1-active', on);
         $$(COL_PARTS, col).forEach(function (el) { toggle(el, 'nc1-active', on); });
+        if (!on) $$('.nc1-link', col).forEach(function (l) { setLinkHover(l, false); });
       });
     }
+
+    cols.forEach(function (col) {
+      $$('.nc1-link', col).forEach(function (link) {
+        function enter() {
+          if (MQ_MOBILE.matches || !col.classList.contains('nc1-active')) return;
+          setLinkHover(link, true);
+        }
+        function leave() { setLinkHover(link, false); }
+        link.addEventListener('mouseenter', enter);
+        link.addEventListener('focus', enter);
+        link.addEventListener('mouseleave', leave);
+        link.addEventListener('blur', leave);
+      });
+    });
 
     function setActiveTab(index) {
       tabs.forEach(function (tab, i) {
@@ -121,13 +147,18 @@
         it.el.style.transition = '';
         it.el.style.transitionDelay = it.delay + 'ms';
       });
-      requestAnimationFrame(function () {
-        items.forEach(function (it) {
-          Object.keys(ACTIVE).forEach(function (c) {
-            if (it.el.classList.contains(c)) it.el.classList.add(ACTIVE[c]);
-          });
+      // Styles were flushed above, so adding the classes now still transitions.
+      items.forEach(function (it) {
+        Object.keys(ACTIVE).forEach(function (c) {
+          if (it.el.classList.contains(c)) it.el.classList.add(ACTIVE[c]);
         });
       });
+      // Clear the stagger delay once the entrance is done, so hover
+      // transitions (background, color) respond immediately.
+      clearTimeout(replay.timer);
+      replay.timer = setTimeout(function () {
+        items.forEach(function (it) { it.el.style.transitionDelay = ''; });
+      }, MAX_DELAY + 700);
     }
 
     // Rendered = not inside display:none (e.g. a closed mobile accordion).
