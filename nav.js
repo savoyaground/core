@@ -5,7 +5,8 @@
  * Desktop (>= 992px): hovering or focusing a top tab opens the full mega menu
  *   (all four columns at once). The hovered tab's copper underline draws in
  *   left to right, and its matching category column switches to the dark
- *   active state (black panel, white text, light grey arrows).
+ *   active state (black panel, white text, light grey arrows). Hovering a
+ *   column does the reverse: it activates that column and its top link.
  *   First click/tap on a tab while the menu is closed opens it; a click while
  *   open follows the tab's link. Escape, outside click, or leaving the nav closes it.
  * Tablet/mobile (<= 991px): the hamburger opens a full-height drawer. Column
@@ -177,6 +178,17 @@
         // First tap (touch laptops/tablets in landscape) opens instead of navigating.
         if (!isOpen) { e.preventDefault(); openPanel(i); }
       });
+    });
+
+    // Hovering (or tabbing into) a category column activates that column and
+    // its matching top link, so the tab underline follows the pointer.
+    cols.forEach(function (col, i) {
+      function activate() {
+        if (MQ_MOBILE.matches || !isOpen) return;
+        setActiveTab(i);
+      }
+      col.addEventListener('mouseenter', activate);
+      col.addEventListener('focusin', activate);
     });
 
     nav.addEventListener('mouseleave', function () { if (!MQ_MOBILE.matches && isOpen) scheduleClose(); });
