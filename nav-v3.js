@@ -13,9 +13,10 @@
  *     column's black panel rises from the bottom with its image reveal (0.9s
  *     ease-in-out sine); after that, columns fade to black as in V1.
  *     data-nc1-rise="open" on .nc1-nav makes it rise on every open instead.
- *   - Image swap: each column's hover image crossfades in (0.35s) with a
- *     fast, faint ripple ring from the cursor. Hover images mapped in
- *     HOVER_IMAGES, or per column via data-nc1-hover-src. Sidebar CTA too.
+ *   - Image swap: each column's hover image crossfades in (0.35s); once it is
+ *     in, a faint water ripple spreads across it (SVG displacement, 1.2s) with
+ *     a soft highlight ring. Hover images mapped in HOVER_IMAGES, or per
+ *     column via data-nc1-hover-src. Sidebar CTA too.
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -107,13 +108,13 @@
 
     // ---- Image swap: quick crossfade + a fast, faint ripple ring --------------
     N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
-    N + '.nc1-swap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;' +
+    N + '.nc1-swap{position:absolute;top:-8px;left:-8px;width:calc(100% + 16px);height:calc(100% + 16px);max-width:none;object-fit:cover;display:block;z-index:1;' +
       'pointer-events:none;opacity:0;transition:opacity .3s EASE;}' +
     N + '.nc1-swap.nc1-on{opacity:1;transition:opacity .35s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
     N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
       'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
-      'border:1px solid rgba(255,255,255,.35);' +
-      'transform:scale(0);opacity:.6;animation:nc1-ring .5s cubic-bezier(.61,1,.88,1) forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
+      'border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.12);' +
+      'transform:scale(0);opacity:.75;animation:nc1-ring 1.2s cubic-bezier(.33,1,.68,1) forwards;}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
@@ -225,6 +226,87 @@
     setTimeout(function () { el.remove(); }, 700 + (delay || 0));
   }
 
+  // ---- water ripple: concentric displacement map, expanded from a point ----
+  var RIPPLE_MS = 1200, RIPPLE_SCALE = 6;
+  var rippleMap = null, svgDefs = null, rippleId = 0;
+  function getRippleMap() {
+    if (rippleMap) return rippleMap;
+    var n = 512, c = document.createElement('canvas'); c.width = c.height = n;
+    var g = c.getContext('2d'), img = g.createImageData(n, n), d = img.data;
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+      var dx = (x + 0.5) / n * 2 - 1, dy = (y + 0.5) / n * 2 - 1, r = Math.sqrt(dx * dx + dy * dy);
+      var w = 0;
+      if (r < 1 && r > 0.0001) {
+        var env = Math.sin(Math.PI * Math.min(1, Math.max(0, (r - 0.35) / 0.65)));   // wave band near the front
+        w = Math.sin(r * Math.PI * 5) * env * env;
+      }
+      var k = (y * n + x) * 4, ux = r ? dx / r : 0, uy = r ? dy / r : 0;
+      d[k] = 128 + 127 * w * ux; d[k + 1] = 128 + 127 * w * uy; d[k + 2] = 128; d[k + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    rippleMap = c.toDataURL('image/png');
+    return rippleMap;
+  }
+  function ensureDefs() {
+    if (svgDefs) return svgDefs;
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden');
+    svgDefs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svg.appendChild(svgDefs); document.body.appendChild(svg);
+    return svgDefs;
+  }
+  function makeRipple(box, layer) {
+    var NS = 'http://www.w3.org/2000/svg', id = 'nc1-ripple-' + (++rippleId);
+    var f = document.createElementNS(NS, 'filter');
+    f.setAttribute('id', id); f.setAttribute('x', '0'); f.setAttribute('y', '0');
+    f.setAttribute('width', '100%'); f.setAttribute('height', '100%');
+    f.setAttribute('color-interpolation-filters', 'sRGB');
+    // neutral grey everywhere (= no displacement), the ripple map on top,
+    // then a light blur to smooth the 8-bit steps
+    var flood = document.createElementNS(NS, 'feFlood');
+    flood.setAttribute('flood-color', 'rgb(128,128,128)'); flood.setAttribute('result', 'bg');
+    var fi = document.createElementNS(NS, 'feImage');
+    fi.setAttribute('preserveAspectRatio', 'none'); fi.setAttribute('result', 'img');
+    var merge = document.createElementNS(NS, 'feMerge'); merge.setAttribute('result', 'raw');
+    ['bg', 'img'].forEach(function (n) {
+      var mn = document.createElementNS(NS, 'feMergeNode'); mn.setAttribute('in', n); merge.appendChild(mn);
+    });
+    var blur = document.createElementNS(NS, 'feGaussianBlur');
+    blur.setAttribute('in', 'raw'); blur.setAttribute('stdDeviation', '1.5'); blur.setAttribute('result', 'map');
+    var fd = document.createElementNS(NS, 'feDisplacementMap');
+    fd.setAttribute('in', 'SourceGraphic'); fd.setAttribute('in2', 'map');
+    fd.setAttribute('xChannelSelector', 'R'); fd.setAttribute('yChannelSelector', 'G');
+    [flood, fi, merge, blur, fd].forEach(function (n) { f.appendChild(n); }); ensureDefs().appendChild(f);
+    var raf = 0, timer = 0;
+    function stop() { cancelAnimationFrame(raf); clearTimeout(timer); layer.style.filter = ''; }
+    return {
+      play: function (x, y, delay) {
+        stop();
+        if (REDUCED.matches) return;
+        timer = setTimeout(function () {
+          var href = getRippleMap();
+          fi.setAttribute('href', href); fi.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
+          var r = box.getBoundingClientRect(), t0 = 0;
+          var max = 2.3 * Math.sqrt(r.width * r.width + r.height * r.height) / 1.0;
+          var px = x + 8, py = y + 8; // the layer overhangs the frame by 8px
+          layer.style.filter = 'url(#' + id + ')';
+          ring(box, x, y, 0);
+          (function step(ts) {
+            if (!t0) t0 = ts;
+            var t = Math.min(1, (ts - t0) / RIPPLE_MS), e = Math.sin(t * Math.PI / 2);
+            var size = Math.max(1, max * e);
+            fi.setAttribute('x', px - size / 2); fi.setAttribute('y', py - size / 2);
+            fi.setAttribute('width', size); fi.setAttribute('height', size);
+            fd.setAttribute('scale', (RIPPLE_SCALE * (1 - t)).toFixed(2));
+            if (t < 1) raf = requestAnimationFrame(step); else layer.style.filter = '';
+          })(performance.now());
+        }, delay || 0);
+      },
+      stop: stop
+    };
+  }
+
   function makeSwap(box, src, tracker) {
     var layer = document.createElement('img');
     layer.className = 'nc1-swap';
@@ -233,6 +315,7 @@
     layer.decoding = 'async';
     layer.setAttribute('data-src', src);
     box.appendChild(layer);
+    var rip = makeRipple(box, layer);
     var last = { x: null, y: null };
     function track(e) {
       var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
@@ -250,9 +333,14 @@
         box.style.setProperty('--nc1-ry', y + 'px');
         layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
         layer.classList.add('nc1-on');
-        ring(box, x, y, delay);
+        // ripple sets in once the hover image has faded in; it starts from the
+        // cursor if it's over the image, otherwise from the image's center
+        var cx = (x >= 0 && x <= r.width && y >= 0 && y <= r.height) ? x : r.width / 2;
+        var cy = (x >= 0 && x <= r.width && y >= 0 && y <= r.height) ? y : r.height / 2;
+        rip.play(cx, cy, (delay || 0) + 320);
       },
-      off: function () { layer.classList.remove('nc1-on'); last.x = last.y = null; }
+      off: function () { rip.stop(); layer.classList.remove('nc1-on'); last.x = last.y = null; },
+      replay: function (x, y) { if (layer.classList.contains('nc1-on')) rip.play(x, y, 0); }
     };
   }
 
@@ -378,6 +466,14 @@
         else sw.off();
       });
     }
+    colSwaps.forEach(function (sw, i) {
+      if (!sw) return;
+      var thumb = cols[i].querySelector('.nc1-thumb');
+      thumb.addEventListener('pointerenter', function (e) {
+        var r = thumb.getBoundingClientRect();
+        sw.replay(e.clientX - r.left, e.clientY - r.top);
+      });
+    });
     var mo = new MutationObserver(sync);
     mo.observe(panel, { attributes: true, attributeFilter: ['class'] });
     cols.forEach(function (col) { mo.observe(col, { attributes: true, attributeFilter: ['class'] }); });
