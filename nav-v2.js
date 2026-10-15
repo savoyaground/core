@@ -83,7 +83,7 @@
   // A soft "paper tick" (6ms filtered-noise click, embedded so there's no
   // extra file to host). Decoded once, then played through Web Audio for instant response.
   var CLICK_WAV = 'data:audio/wav;base64,UklGRjQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YRACAACTUpGxRfG75d7osvXNukTs2utvfWk+ygtI+b7msdbf6RwOQgXOI4UK0gW7LG8b3vXk8PQC7yuWAGDwCQnc5dLonQaTCk4AUQiSwrH8O+yh2nn9IxNCBM/yPwFeBSIfUhpCDBIU2f/s7M3+tQX7+5DwP/yh26b+oAn88Cr/6vdiC9fvn/TSCjgXIvR2+osGjAAbFSP+EQVj+WAN8gUn/23wCgvFC6MKIgysBCv5QvTE87AFjPZH+OP7qwEoBqj6svPx/QsKmQouBn0A6wET/zcEiPws//H+ewLbAWEN0gp5CED1Q/fJ9zX+KPQOAWcFTPye+l77pP+0A0wKBAN4A/YApQUhA+0DZPuZ+yX6ugG7AYX+Af2Q/x393Pvb/+EGYQFG/q37x/rA/34CNQFXAbkAcwCN/NX90v+3/hj/qf6m/2oCwwCHAC4CPwLiA2P9SgAa/8b/MwH+AfoBXADiAWz/vf71/4f+3gFfAYcCyv9L/pj+j/9h/kD/Nf8iAS//ZQD+/jz+af4v/qf/HwG4AOoAzwGxABwAdv8h/tX/bv4HABwABQFVAHf/EACg/8X/AgD7//D/gv/S/7v+tP97/9oAXgGN/xgAJQCn/1kADgBF/9L/HABXAMH/bQCwAN7/yf8HAOv/2gB6AMr/pP/p/+sARQAaACkA+f+zAPH/EwDu/wUAfv9AAPH/4P+U/5P//f8=';
-  var CLICK_VOLUME = 0.10; // 0-1; keep it subtle
+  var CLICK_VOLUME = 0.50; // 0-1; keep it subtle
   var ctx = null;
   var clickBuf = null;
   var lastClick = 0;
