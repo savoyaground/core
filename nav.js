@@ -9,6 +9,13 @@
  *     while active); title + links indent 12px only while the column is active
  *     (Figma "Savoya Menu Concept | V2: Hover State").
  *   - Pixel arrows: chevrons built from crisp 1px squares.
+ *   - Menu motion: the active column's black panel rises with its image
+ *     reveal (0.9s ease-in-out sine); text turns white as the panel passes.
+ *   - Image swap: each column's hover image ripples in from the cursor, with
+ *     a faint ring (hover images mapped in HOVER_IMAGES, or per column via
+ *     data-nc1-hover-src). The sidebar CTA swaps the same way on hover.
+ *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
+ *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
  *     Browsers only allow sound after the visitor has clicked/tapped/typed on
  *     the page once, so the very first hovers before any click are silent.
@@ -72,7 +79,57 @@
       N + '.nc1-col .nc1-link.nc1-active{padding:10px 12px;}' +
       N + '.nc1-link-arrow-in{left:12px;}' +
     '}'
-  ].join('\n');
+    ,
+    // ---- Menu animation: black panel rises with the image reveal (desktop) --
+    '@media screen and (min-width:992px){' +
+      N + '.nc1-col{position:relative;isolation:isolate;}' +
+      N + '.nc1-col.nc1-active{background-color:transparent;}' +
+      N + '.nc1-col::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;' +
+        'background:var(--nc1-black,#141313);clip-path:inset(100% 0 0 0);' +
+        'transition:clip-path .5s EASE;transition-delay:0ms;}' +
+      N + '.nc1-col.nc1-active::before{clip-path:inset(0 0 0 0);' +
+        'transition:clip-path .9s EASE;transition-delay:var(--nc1-bg-delay,0ms);}' +
+      N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-col-label,' + N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-col-rule,' +
+        N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-link-text,' + N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-link-arrow{' +
+        'transition-delay:calc(var(--nc1-bg-delay,0ms) + var(--nc1-td,0ms));}' +
+      // image reveal on the same curve and duration as the black panel
+      N + '.nc1-thumb-img.fade-in.reveal-up{transition:opacity .9s EASE,transform .9s EASE,clip-path .9s EASE;}' +
+      // panel stays distinct over the blurred page
+      N + '.nc1-panel.nc1-open{box-shadow:0 28px 60px -24px rgba(20,19,19,.35),0 1px 0 rgba(20,19,19,.06);}' +
+    '}',
+
+    // ---- Image swap: hover image ripples in from the cursor -----------------
+    N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
+    N + '.nc1-swap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;' +
+      'pointer-events:none;clip-path:circle(0% at var(--nc1-rx,50%) var(--nc1-ry,100%));' +
+      'transition:clip-path .55s EASE;}' +
+    N + '.nc1-swap.nc1-on{clip-path:circle(150% at var(--nc1-rx,50%) var(--nc1-ry,100%));' +
+      'transition:clip-path 1s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
+    N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
+      'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
+      'border:1px solid rgba(255,255,255,.55);box-shadow:0 0 18px rgba(255,255,255,.18) inset;' +
+      'transform:scale(0);opacity:.9;animation:nc1-ring 1s EASE forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
+    '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
+
+    // ---- Frosted backdrop behind the open menu (desktop) -------------------
+    '.nc1-backdrop{position:fixed;inset:0;z-index:49;pointer-events:none;opacity:0;visibility:hidden;' +
+      'background:rgba(20,19,19,.16);-webkit-backdrop-filter:blur(10px) saturate(1.05);backdrop-filter:blur(10px) saturate(1.05);' +
+      'transition:opacity .45s EASE,visibility 0s linear .45s;}' +
+    '.nc1-backdrop.nc1-on{opacity:1;visibility:visible;transition:opacity .45s EASE,visibility 0s;}' +
+    '@media screen and (max-width:991px){.nc1-backdrop{display:none;}}',
+
+    // ---- Typography above 1920px: same size at 1920, ~1/3 the growth after --
+    '@media screen and (min-width:1921px){' +
+      N + '.nc1-link-text{font-size:clamp(15.72px,calc(0.12vw + 13.42px),17px);}' +
+      N + '.nc1-col-label{font-size:clamp(11.94px,calc(0.07vw + 10.6px),13px);}' +
+      N + '.nc1-cta-eyebrow{font-size:clamp(10.94px,calc(0.07vw + 9.6px),12px);}' +
+      N + '.nc1-cta-title{font-size:clamp(23.6px,calc(0.25vw + 18.8px),27px);}' +
+      N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
+      N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
+    '}',
+    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-swap{transition:opacity .2s linear!important;clip-path:none!important;opacity:0;}' +
+      N + '.nc1-swap.nc1-on{opacity:1;}' + N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
+  ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
   function injectStyles() {
     if (document.getElementById('nc1-v2-styles')) return;
@@ -125,9 +182,199 @@
     src.start();
   }
 
+  // ---- image swap (ripple) + backdrop + black-panel sync -------------------
+  var CDN = 'https://cdn.prod.website-files.com/62faa9dc6b970a350019a1cd/';
+  // Default image name -> hover image. Override per column/CTA with
+  // data-nc1-hover-src="<url>" on .nc1-col or .nc1-cta.
+  var HOVER_IMAGES = [
+    ['nav-col-company-cover-img', '6ad123499a9c302774d22cbf_nav-col-company-cover-img-hover3x.webp', 'company'],
+    ['nav-col-benefits-cover-img', '6ad1234960841e06726c4c0d_nav-col-benefits-cover-img-hover3x.webp', 'benefits'],
+    ['nav-col-who we serve-cover-img', '6ad123497bfb8ae3545954e6_nav-col-who%20we%20serve-cover-img-hover3x.webp', 'who we serve'],
+    ['nav-col-resources-cover-img', '6ad123496db79f796f89754a_nav-col-resources-cover-img-hover3x.webp', 'resources'],
+    ['nav-col-cta-img', '6ad1236c5f9e09e7b72bb316_NAV%20CTA%20Image.webp', null]
+  ];
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var DESKTOP = window.matchMedia('(min-width: 992px)');
+
+  function hoverSrcFor(host, img, label) {
+    var own = host.getAttribute('data-nc1-hover-src');
+    if (own) return own;
+    var src = decodeURIComponent((img && (img.currentSrc || img.src)) || '').toLowerCase();
+    var lbl = (label || '').trim().toLowerCase();
+    for (var i = 0; i < HOVER_IMAGES.length; i++) {
+      if (src.indexOf(HOVER_IMAGES[i][0]) !== -1) return CDN + HOVER_IMAGES[i][1];
+    }
+    for (var j = 0; j < HOVER_IMAGES.length; j++) {
+      if (HOVER_IMAGES[j][2] && lbl === HOVER_IMAGES[j][2]) return CDN + HOVER_IMAGES[j][1];
+    }
+    return null;
+  }
+
+  function ring(box, x, y, delay) {
+    if (REDUCED.matches) return;
+    var r = box.getBoundingClientRect();
+    var d = 2.4 * Math.max(r.width, r.height);
+    var el = document.createElement('span');
+    el.className = 'nc1-ring';
+    el.style.cssText = '--x:' + x + 'px;--y:' + y + 'px;--d:' + d + 'px;' + (delay ? '--nc1-rip-delay:' + delay + 'ms;' : '');
+    box.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1200 + (delay || 0));
+  }
+
+  function makeSwap(box, src, tracker) {
+    var layer = document.createElement('img');
+    layer.className = 'nc1-swap';
+    layer.alt = '';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.decoding = 'async';
+    layer.setAttribute('data-src', src);
+    box.appendChild(layer);
+    var last = { x: null, y: null };
+    function track(e) {
+      var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
+    }
+    (tracker || box).addEventListener('pointerenter', track);
+    (tracker || box).addEventListener('pointermove', track);
+    return {
+      layer: layer,
+      on: function (fromPointer, delay) {
+        if (layer.classList.contains('nc1-on')) return;
+        var r = box.getBoundingClientRect();
+        var x = fromPointer && last.x !== null ? last.x : r.width / 2;
+        var y = fromPointer && last.y !== null ? last.y : r.height;
+        box.style.setProperty('--nc1-rx', x + 'px');
+        box.style.setProperty('--nc1-ry', y + 'px');
+        layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
+        layer.classList.add('nc1-on');
+        ring(box, x, y, delay);
+      },
+      off: function () { layer.classList.remove('nc1-on'); last.x = last.y = null; }
+    };
+  }
+
+  // While the black panel rises (0.9s, ease-in-out sine), each piece of text
+  // turns white at the moment the panel's top edge passes behind it. Delays are
+  // stored per element as --nc1-td and only apply until the column "settles".
+  var RISE_MS = 900;
+  var TEXT_PARTS = '.nc1-col-label, .nc1-col-rule, .nc1-link-text, .nc1-link-arrow';
+  function measureTextDelays(col) {
+    var r = col.getBoundingClientRect();
+    if (!r.height) return;
+    Array.prototype.forEach.call(col.querySelectorAll(TEXT_PARTS), function (el) {
+      var e = el.getBoundingClientRect();
+      var y = 1 - ((e.top + e.height / 2) - r.top) / r.height;   // 0 = bottom, 1 = top
+      y = Math.max(0, Math.min(1, y));
+      var t = Math.acos(1 - 2 * y) / Math.PI;                       // inverse easeInOutSine
+      el.style.setProperty('--nc1-td', Math.max(0, Math.round(t * RISE_MS - 120)) + 'ms');
+    });
+  }
+
+  function loadSwaps(nav) {
+    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-swap[data-src]'), function (img) {
+      img.src = img.getAttribute('data-src'); img.removeAttribute('data-src');
+    });
+  }
+
+  function initFx(nav) {
+    var panel = nav.querySelector('.nc1-panel');
+    if (!panel) return;
+    var cols = Array.prototype.slice.call(panel.querySelectorAll('.nc1-col'));
+    var colSwaps = cols.map(function (col) {
+      var thumb = col.querySelector('.nc1-thumb');
+      var img = thumb && thumb.querySelector('img');
+      var label = col.querySelector('.nc1-col-label');
+      var src = thumb && hoverSrcFor(col, img, label && label.textContent);
+      if (!src) return null;
+      var sw = makeSwap(thumb, src, col);
+      sw.pointerIn = false;
+      col.addEventListener('pointerenter', function () { sw.pointerIn = true; });
+      col.addEventListener('pointerleave', function () { sw.pointerIn = false; });
+      return sw;
+    });
+
+    // Sidebar CTA: ripple in on hover
+    var cta = panel.querySelector('.nc1-cta');
+    var ctaMedia = cta && cta.querySelector('.nc1-cta-media');
+    if (ctaMedia) {
+      var ctaSrc = hoverSrcFor(cta, ctaMedia.querySelector('img'), null);
+      if (ctaSrc) {
+        var csw = makeSwap(ctaMedia, ctaSrc, cta);
+        cta.addEventListener('pointerenter', function () {
+          if (DESKTOP.matches) requestAnimationFrame(function () { csw.on(true, 0); });
+        });
+        cta.addEventListener('pointerleave', function () { csw.off(); });
+      }
+    }
+
+    // Frosted backdrop
+    var backdrop = document.createElement('div');
+    backdrop.className = 'nc1-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdrop);
+
+    var wasOpen = false, openTimer = null, loaded = false;
+    function sync() {
+      var open = panel.classList.contains('nc1-open');
+      backdrop.classList.toggle('nc1-on', open && DESKTOP.matches);
+      if (open && !loaded) { loadSwaps(nav); loaded = true; }
+      var opening = open && !wasOpen;
+      wasOpen = open;
+      if (opening) {
+        cols.forEach(measureTextDelays);
+        // Same stagger as nav.js's entrance (70ms per column): the black panel
+        // rises with that column's image; the swap ripples once it is up.
+        cols.forEach(function (col, i) {
+          col.style.setProperty('--nc1-bg-delay', (i * 70) + 'ms');
+        });
+        clearTimeout(openTimer);
+        openTimer = setTimeout(function () {
+          cols.forEach(function (col) { col.style.removeProperty('--nc1-bg-delay'); });
+          opening = false;
+        }, 1400);
+      }
+      cols.forEach(function (col, i) {
+        var nowActive = open && DESKTOP.matches && col.classList.contains('nc1-active');
+        if (nowActive && !col.__nc1Active) {
+          clearTimeout(col.__nc1Settle);
+          col.__nc1Settle = setTimeout(function () {
+            if (!col.classList.contains('nc1-settled')) col.classList.add('nc1-settled');
+          },
+            (opening ? i * 70 : 0) + RISE_MS + 100);
+        } else if (!nowActive) {
+          clearTimeout(col.__nc1Settle);
+          if (col.classList.contains('nc1-settled')) col.classList.remove('nc1-settled');
+        }
+        col.__nc1Active = nowActive;
+        var sw = colSwaps[i];
+        if (!sw) return;
+        var active = nowActive;
+        if (active) sw.on(sw.pointerIn, opening ? i * 70 + 450 : 0);
+        else sw.off();
+      });
+    }
+    window.addEventListener('resize', function () {
+      if (panel.classList.contains('nc1-open')) cols.forEach(measureTextDelays);
+    });
+    var mo = new MutationObserver(sync);
+    mo.observe(panel, { attributes: true, attributeFilter: ['class'] });
+    cols.forEach(function (col) { mo.observe(col, { attributes: true, attributeFilter: ['class'] }); });
+
+    // Ripple ring when the pointer enters an image that's already swapped
+    colSwaps.forEach(function (sw, i) {
+      if (!sw) return;
+      var thumb = cols[i].querySelector('.nc1-thumb');
+      thumb.addEventListener('pointerenter', function (e) {
+        if (!sw.layer.classList.contains('nc1-on')) return;
+        var r = thumb.getBoundingClientRect();
+        ring(thumb, e.clientX - r.left, e.clientY - r.top, 0);
+      });
+    });
+  }
+
   function initV2(nav) {
     nav.classList.add('nc1-v2');
     addPixelArrows(nav);
+    initFx(nav);
     if (nav.getAttribute('data-nc1-sound') === 'off') return;
     var fine = window.matchMedia('(hover: hover) and (pointer: fine)');
     Array.prototype.forEach.call(nav.querySelectorAll('.nc1-panel .nc1-link'), function (link) {
