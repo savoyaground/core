@@ -11,11 +11,10 @@
  *   - Pixel arrows: chevrons built from crisp 1px squares.
  *   - Menu motion: the active column's black panel rises with its image
  *     reveal (0.9s ease-in-out sine); text turns white as the panel passes.
- *   - Image swap: each column's hover image reveals bottom-up with a slight
- *     fade (0.45s, in step with the black panel); a faint ripple ring plays
- *     when the cursor enters an image already showing its hover version.
- *     Hover images mapped in HOVER_IMAGES, or per column via
- *     data-nc1-hover-src. The sidebar CTA swaps the same way on hover.
+ *   - Image swap: each column's hover image crossfades in (0.35s) with a
+ *     fast, faint ripple ring from the cursor. Hover images mapped in
+ *     HOVER_IMAGES, or per column via data-nc1-hover-src. The sidebar CTA
+ *     swaps the same way on hover.
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -100,17 +99,15 @@
       N + '.nc1-panel.nc1-open{box-shadow:0 28px 60px -24px rgba(20,19,19,.35),0 1px 0 rgba(20,19,19,.06);}' +
     '}',
 
-    // ---- Image swap: hover image reveals bottom-up with a slight fade/drift --
+    // ---- Image swap: quick crossfade + a fast, faint ripple ring --------------
     N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
     N + '.nc1-swap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;' +
-      'pointer-events:none;clip-path:inset(100% 0 0 0);opacity:0;transform:translateY(8px);' +
-      'transition:clip-path .3s EASE,opacity .3s EASE,transform .3s EASE;}' +
-    N + '.nc1-swap.nc1-on{clip-path:inset(0 0 0 0);opacity:1;transform:translateY(0);' +
-      'transition:clip-path .45s EASE,opacity .45s EASE,transform .45s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
+      'pointer-events:none;opacity:0;transition:opacity .3s EASE;}' +
+    N + '.nc1-swap.nc1-on{opacity:1;transition:opacity .35s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
     N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
       'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
-      'border:1px solid rgba(255,255,255,.55);box-shadow:0 0 18px rgba(255,255,255,.18) inset;' +
-      'transform:scale(0);opacity:.9;animation:nc1-ring 1s EASE forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
+      'border:1px solid rgba(255,255,255,.35);' +
+      'transform:scale(0);opacity:.6;animation:nc1-ring .5s cubic-bezier(.61,1,.88,1) forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
@@ -215,12 +212,12 @@
   function ring(box, x, y, delay) {
     if (REDUCED.matches) return;
     var r = box.getBoundingClientRect();
-    var d = 2.4 * Math.max(r.width, r.height);
+    var d = 1.8 * Math.max(r.width, r.height);
     var el = document.createElement('span');
     el.className = 'nc1-ring';
     el.style.cssText = '--x:' + x + 'px;--y:' + y + 'px;--d:' + d + 'px;' + (delay ? '--nc1-rip-delay:' + delay + 'ms;' : '');
     box.appendChild(el);
-    setTimeout(function () { el.remove(); }, 1200 + (delay || 0));
+    setTimeout(function () { el.remove(); }, 700 + (delay || 0));
   }
 
   function makeSwap(box, src, tracker) {
@@ -248,6 +245,7 @@
         box.style.setProperty('--nc1-ry', y + 'px');
         layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
         layer.classList.add('nc1-on');
+        ring(box, x, y, delay);
       },
       off: function () { layer.classList.remove('nc1-on'); last.x = last.y = null; }
     };
@@ -360,7 +358,7 @@
     mo.observe(panel, { attributes: true, attributeFilter: ['class'] });
     cols.forEach(function (col) { mo.observe(col, { attributes: true, attributeFilter: ['class'] }); });
 
-    // Ripple ring (only accent) when the pointer enters an image that's already swapped
+    // Ripple ring when the pointer enters an image that's already swapped
     colSwaps.forEach(function (sw, i) {
       if (!sw) return;
       var thumb = cols[i].querySelector('.nc1-thumb');
