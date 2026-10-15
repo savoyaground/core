@@ -2,7 +2,7 @@
  * Savoya Nav Concept 01 — V2 (alternate version of nav.js)
  * Same behavior as nav.js, plus:
  *   - Flush columns: no padding around the active column's black panel; the
- *     thumbnail sits flush with the column edges; title + links indent 12px
+ *     thumbnail sits flush with the column edges (square bottom corners); title + links indent 12px
  *     only while the column is active (matches Figma "V2: Hover State").
  *   - Pixel arrows: chevrons built from crisp 1px squares (link arrows,
  *     hover arrow, mobile accordion chevrons).
@@ -59,6 +59,7 @@
     '@media screen and (min-width:992px){' +
       N + '.nc1-cols{grid-column-gap:24px;column-gap:24px;}' +
       N + '.nc1-col{padding:0;}' +
+      N + '.nc1-thumb{border-bottom-left-radius:0;border-bottom-right-radius:0;}' +
       N + '.nc1-col-label{padding:0;transition:padding .2s ease,color .2s ease;}' +
       N + '.nc1-col-label.nc1-active{padding:0 12px;}' +
       N + '.nc1-link{margin:0;padding:10px 0;' +
