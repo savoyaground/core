@@ -15,6 +15,7 @@ Webflow > Site settings > Custom code:
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/savoyaground/animation@<commit>/animation.js"></script>
 <script defer src="https://cdn.jsdelivr.net/gh/savoyaground/core@<commit>/nav.js"></script>
+<!-- nav.js is the master nav (formerly nav-v2.js); nav-v1.js is kept for rollback only -->
 ```
 Pin `<commit>` to a real commit hash, not a branch, so a push can't change the live site unexpectedly.
 
@@ -25,7 +26,10 @@ Pin `<commit>` to a real commit hash, not a branch, so a push can't change the l
 - [ ] Remove the duplicate `buttons.js` on the Nav Concept 01 page (loaded in both head and footer)
 - [ ] Swap the old **Main Nav** component for the new nav on live pages
 - [ ] Archive or delete the Nav Concept 01 draft page
-- [ ] Do **not** run Webflow's "Clean up unused styles" on `nc1-open` / `nc1-active`. Only `nav.js` applies them, so Webflow thinks they're unused.
+- [ ] Do **not** run Webflow's "Clean up unused styles" on `nc1-open` / `nc1-active` / `nc1-hover`. Only `nav.js` applies them, so Webflow thinks they're unused.
+- [ ] Update the Nav Concept 01 footer from `nav-v2.js` to `nav.js` (new commit hash)
+- [ ] Optional: move nav.js's injected V2 styles (`.nc1-nav.nc1-v2 …`) into Webflow classes if designers need to edit them
+- [ ] Once the new nav is live and stable, delete `nav-v1.js` from the repo
 
 ## What nav.js needs on the page
 - Webflow classes `nc1-*` (Nav Bar, Nav Item Col, Nav Item List Item, Sidebar CTA, Nav Footer Bar components)
