@@ -13,9 +13,9 @@
  *     column's black panel rises from the bottom with its image reveal (0.9s
  *     ease-in-out sine); after that, columns fade to black as in V1.
  *     data-nc1-rise="open" on .nc1-nav makes it rise on every open instead.
- *   - Image swap (V3): the hover image slides up from below and pushes the
- *     current image up and out (0.55s); reverses on leave. Hover images mapped
- *     in HOVER_IMAGES, or per column via data-nc1-hover-src. Sidebar CTA too.
+ *   - Image swap: each column's hover image crossfades in (0.35s) with a
+ *     fast, faint ripple ring from the cursor. Hover images mapped in
+ *     HOVER_IMAGES, or per column via data-nc1-hover-src. Sidebar CTA too.
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -100,19 +100,20 @@
         return N + '.nc1-panel.nc1-rise-ready .nc1-col.nc1-active' + t + ',' + N + '.nc1-col.nc1-rising.nc1-active:not(.nc1-settled)' + t;
       }).join(',') + '{transition-delay:calc(var(--nc1-bg-delay,0ms) + var(--nc1-td,0ms));}' +
       // image reveal on the same curve and duration as the black panel
-      N + '.nc1-thumb-img.fade-in.reveal-up{transition:opacity .9s EASE,transform .9s EASE,clip-path .9s EASE,translate .55s EASE;}' +
+      N + '.nc1-thumb-img.fade-in.reveal-up{transition:opacity .9s EASE,transform .9s EASE,clip-path .9s EASE;}' +
       // panel stays distinct over the blurred page
       N + '.nc1-panel.nc1-open{box-shadow:0 28px 60px -24px rgba(20,19,19,.35),0 1px 0 rgba(20,19,19,.06);}' +
     '}',
 
-    // ---- Image swap: hover image slides up, pushing the current one up ------
+    // ---- Image swap: quick crossfade + a fast, faint ripple ring --------------
     N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
-    N + '.nc1-thumb-img,' + N + '.nc1-cta-img{translate:0 0;}' +
-    N + '.nc1-cta-img.fade-in{transition:opacity .6s ease,transform .6s ease,translate .55s EASE;}' +
-    N + '.nc1-swapped .nc1-thumb-img,' + N + '.nc1-swapped .nc1-cta-img{translate:0 -100%;transition-delay:var(--nc1-rip-delay,0ms);}' +
     N + '.nc1-swap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;' +
-      'pointer-events:none;translate:0 100%;transition:translate .55s EASE;}' +
-    N + '.nc1-swap.nc1-on{translate:0 0;transition-delay:var(--nc1-rip-delay,0ms);}' +
+      'pointer-events:none;opacity:0;transition:opacity .3s EASE;}' +
+    N + '.nc1-swap.nc1-on{opacity:1;transition:opacity .35s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
+    N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
+      'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
+      'border:1px solid rgba(255,255,255,.35);' +
+      'transform:scale(0);opacity:.6;animation:nc1-ring .5s cubic-bezier(.61,1,.88,1) forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
@@ -131,7 +132,7 @@
       N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
       N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
     '}',
-    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-swap,' + N + '.nc1-thumb-img,' + N + '.nc1-cta-img{transition:none!important;}' + N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
+    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-swap{transition:opacity .2s linear!important;}' + N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
   ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
   function injectStyles() {
@@ -247,14 +248,11 @@
         var y = fromPointer && last.y !== null ? last.y : r.height;
         box.style.setProperty('--nc1-rx', x + 'px');
         box.style.setProperty('--nc1-ry', y + 'px');
-        box.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
+        layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
         layer.classList.add('nc1-on');
-        box.classList.add('nc1-swapped');
+        ring(box, x, y, delay);
       },
-      off: function () {
-        box.style.setProperty('--nc1-rip-delay', '0ms');
-        layer.classList.remove('nc1-on'); box.classList.remove('nc1-swapped'); last.x = last.y = null;
-      }
+      off: function () { layer.classList.remove('nc1-on'); last.x = last.y = null; }
     };
   }
 
