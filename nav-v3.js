@@ -14,8 +14,9 @@
  *     ease-in-out sine); after that, columns fade to black as in V1.
  *     data-nc1-rise="open" on .nc1-nav makes it rise on every open instead.
  *   - Image ripple: when a column becomes active, a faint water ripple spreads
- *     across its image (SVG displacement, 1.2s) with a soft highlight ring;
+ *     across its image (SVG displacement, 1.8s) with a soft highlight ring;
  *     replays when the cursor enters the image. Sidebar CTA image too.
+ *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -110,8 +111,18 @@
     N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
       'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
       'border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.12);' +
-      'transform:scale(0);opacity:.75;animation:nc1-ring 1.2s cubic-bezier(.33,1,.68,1) forwards;}' +
+      'transform:scale(0);opacity:.75;animation:nc1-ring 1.8s cubic-bezier(.33,1,.68,1) forwards;}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
+
+    // ---- Tablet (768-991px): sidebar ad becomes a horizontal card ---------
+    '@media screen and (min-width:768px) and (max-width:991px){' +
+      N + '.nc1-cta{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);column-gap:24px;' +
+        'align-items:center;width:100%;max-width:none;padding:16px;}' +
+      N + '.nc1-cta > *{min-width:0;}' +
+      N + '.nc1-cta-media{grid-row:1 / span 5;grid-column:1;height:100%;aspect-ratio:4 / 3;border-radius:6px;overflow:hidden;}' +
+      N + '.nc1-cta-img{width:100%;height:100%;object-fit:cover;}' +
+      N + '.nc1-cta > :not(.nc1-cta-media){grid-column:2;}' +
+    '}',
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
     '.nc1-backdrop{position:fixed;inset:0;z-index:49;pointer-events:none;opacity:0;visibility:hidden;' +
@@ -195,11 +206,11 @@
     el.className = 'nc1-ring';
     el.style.cssText = '--x:' + x + 'px;--y:' + y + 'px;--d:' + d + 'px;' + (delay ? '--nc1-rip-delay:' + delay + 'ms;' : '');
     box.appendChild(el);
-    setTimeout(function () { el.remove(); }, 700 + (delay || 0));
+    setTimeout(function () { el.remove(); }, 2000 + (delay || 0));
   }
 
   // ---- water ripple: concentric displacement map, expanded from a point ----
-  var RIPPLE_MS = 1200, RIPPLE_SCALE = 6;
+  var RIPPLE_MS = 1800, RIPPLE_SCALE = 6;
   var rippleMap = null, svgDefs = null, rippleId = 0;
   function getRippleMap() {
     if (rippleMap) return rippleMap;
