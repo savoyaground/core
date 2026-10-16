@@ -16,6 +16,9 @@
  *   - Image ripple: when a column becomes active, a faint water ripple spreads
  *     across its image (SVG displacement, 1.8s) with a soft highlight ring;
  *     replays when the cursor enters the image. Sidebar CTA image too.
+ *   - Click focus (desktop): clicking a top link focuses its column with one
+ *     lap of the gold ring from .glow-card (core/cards.css), then a soft glow.
+ *     The link's href stays for SEO; on desktop the click doesn't navigate.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
@@ -113,6 +116,22 @@
       'border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.12);' +
       'transform:scale(0);opacity:.75;animation:nc1-ring 1.8s cubic-bezier(.33,1,.68,1) forwards;}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
+
+    // ---- Click focus halo (same ring as .glow-card in core/cards.css) -------
+    // One lap of the traveling gold ring, then it rests with the soft glow.
+    '@property --nc1-halo-a{syntax:"<angle>";inherits:false;initial-value:0deg;}',
+    '@keyframes nc1-halo-spin{from{--nc1-halo-a:0deg;}to{--nc1-halo-a:360deg;}}',
+    '@media screen and (min-width:992px){' +
+      N + '.nc1-col{transition:box-shadow .5s ease;}' +
+      N + '.nc1-col::after{content:"";position:absolute;inset:0;z-index:2;padding:1.5px;border-radius:inherit;' +
+        'background:conic-gradient(from var(--nc1-halo-a),rgba(197,97,41,.2) 0%,#C56129 20%,#F5AD59 35%,#C56129 50%,rgba(197,97,41,.2) 70%);' +
+        '-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;' +
+        'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;' +
+        'opacity:0;pointer-events:none;transition:opacity .5s ease;}' +
+      N + '.nc1-col.nc1-halo::after{opacity:1;animation:nc1-halo-spin 3.5s linear 1 forwards;}' +
+      N + '.nc1-col.nc1-halo{box-shadow:0 0 24px rgba(245,173,89,.28),0 0 60px rgba(197,97,41,.16);}' +
+    '}',
+    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-col.nc1-halo::after{animation:none;}}',
 
     // ---- Tablet (768-991px): sidebar ad becomes a horizontal card ---------
     '@media screen and (min-width:768px) and (max-width:991px){' +
@@ -426,6 +445,7 @@
           clearTimeout(col.__nc1Settle);
           rem(col, 'nc1-rising'); rem(col, 'nc1-settled');
         }
+        if (!nowActive) rem(col, 'nc1-halo');
         col.__nc1Active = nowActive;
         var sw = colSwaps[i];
         if (!sw) return;
@@ -439,6 +459,23 @@
       thumb.addEventListener('pointerenter', function (e) {
         var r = thumb.getBoundingClientRect();
         sw.replay(e.clientX - r.left, e.clientY - r.top);
+      });
+    });
+    // Clicking (or pressing Enter on) a top link focuses its column with the
+    // gold halo instead of navigating. The href stays for crawlers and no-JS.
+    function halo(col) {
+      cols.forEach(function (c) { if (c !== col) rem(c, 'nc1-halo'); });
+      rem(col, 'nc1-halo');
+      void col.offsetWidth; // restart the lap on repeat clicks
+      add(col, 'nc1-halo');
+    }
+    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-tab'), function (tab, i) {
+      tab.addEventListener('click', function (e) {
+        if (!DESKTOP.matches || !cols[i]) return;
+        e.preventDefault();
+        setTimeout(function () {
+          if (has(panel, 'nc1-open') && has(cols[i], 'nc1-active')) halo(cols[i]);
+        }, 0);
       });
     });
     var mo = new MutationObserver(sync);
