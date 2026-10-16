@@ -13,10 +13,9 @@
  *     column's black panel rises from the bottom with its image reveal (0.9s
  *     ease-in-out sine); after that, columns fade to black as in V1.
  *     data-nc1-rise="open" on .nc1-nav makes it rise on every open instead.
- *   - Image swap: each column's hover image crossfades in (0.35s); once it is
- *     in, a faint water ripple spreads across it (SVG displacement, 1.2s) with
- *     a soft highlight ring. Hover images mapped in HOVER_IMAGES, or per
- *     column via data-nc1-hover-src. Sidebar CTA too.
+ *   - Image ripple: when a column becomes active, a faint water ripple spreads
+ *     across its image (SVG displacement, 1.2s) with a soft highlight ring;
+ *     replays when the cursor enters the image. Sidebar CTA image too.
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -106,11 +105,8 @@
       N + '.nc1-panel.nc1-open{box-shadow:0 28px 60px -24px rgba(20,19,19,.35),0 1px 0 rgba(20,19,19,.06);}' +
     '}',
 
-    // ---- Image swap: quick crossfade + a fast, faint ripple ring --------------
+    // ---- Image ripple (no hover image) ----------------------------------------
     N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
-    N + '.nc1-swap{position:absolute;top:-8px;left:-8px;width:calc(100% + 16px);height:calc(100% + 16px);max-width:none;object-fit:cover;display:block;z-index:1;' +
-      'pointer-events:none;opacity:0;transition:opacity .3s EASE;}' +
-    N + '.nc1-swap.nc1-on{opacity:1;transition:opacity .35s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
     N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
       'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
       'border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.12);' +
@@ -133,7 +129,7 @@
       N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
       N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
     '}',
-    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-swap{transition:opacity .2s linear!important;}' + N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
+    '@media (prefers-reduced-motion:reduce){' +  N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
   ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
   function injectStyles() {
@@ -188,32 +184,8 @@
   }
 
   // ---- image swap (ripple) + backdrop + black-panel sync -------------------
-  var CDN = 'https://cdn.prod.website-files.com/62faa9dc6b970a350019a1cd/';
-  // Default image name -> hover image. Override per column/CTA with
-  // data-nc1-hover-src="<url>" on .nc1-col or .nc1-cta.
-  var HOVER_IMAGES = [
-    ['nav-col-company-cover-img', '6ad123499a9c302774d22cbf_nav-col-company-cover-img-hover3x.webp', 'company'],
-    ['nav-col-benefits-cover-img', '6ad1234960841e06726c4c0d_nav-col-benefits-cover-img-hover3x.webp', 'benefits'],
-    ['nav-col-who we serve-cover-img', '6ad123497bfb8ae3545954e6_nav-col-who%20we%20serve-cover-img-hover3x.webp', 'who we serve'],
-    ['nav-col-resources-cover-img', '6ad123496db79f796f89754a_nav-col-resources-cover-img-hover3x.webp', 'resources'],
-    ['nav-col-cta-img', '6ad1236c5f9e09e7b72bb316_NAV%20CTA%20Image.webp', null]
-  ];
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   var DESKTOP = window.matchMedia('(min-width: 992px)');
-
-  function hoverSrcFor(host, img, label) {
-    var own = host.getAttribute('data-nc1-hover-src');
-    if (own) return own;
-    var src = decodeURIComponent((img && (img.currentSrc || img.src)) || '').toLowerCase();
-    var lbl = (label || '').trim().toLowerCase();
-    for (var i = 0; i < HOVER_IMAGES.length; i++) {
-      if (src.indexOf(HOVER_IMAGES[i][0]) !== -1) return CDN + HOVER_IMAGES[i][1];
-    }
-    for (var j = 0; j < HOVER_IMAGES.length; j++) {
-      if (HOVER_IMAGES[j][2] && lbl === HOVER_IMAGES[j][2]) return CDN + HOVER_IMAGES[j][1];
-    }
-    return null;
-  }
 
   function ring(box, x, y, delay) {
     if (REDUCED.matches) return;
@@ -276,8 +248,14 @@
     blur.setAttribute('in', 'raw'); blur.setAttribute('stdDeviation', '1.5'); blur.setAttribute('result', 'map');
     var fd = document.createElementNS(NS, 'feDisplacementMap');
     fd.setAttribute('in', 'SourceGraphic'); fd.setAttribute('in2', 'map');
+    fd.setAttribute('result', 'warped');
+    // where the wave pulls in pixels from outside the image, show the original
+    var under = document.createElementNS(NS, 'feMerge');
+    ['SourceGraphic', 'warped'].forEach(function (n) {
+      var mn = document.createElementNS(NS, 'feMergeNode'); mn.setAttribute('in', n); under.appendChild(mn);
+    });
     fd.setAttribute('xChannelSelector', 'R'); fd.setAttribute('yChannelSelector', 'G');
-    [flood, fi, merge, blur, fd].forEach(function (n) { f.appendChild(n); }); ensureDefs().appendChild(f);
+    [flood, fi, merge, blur, fd, under].forEach(function (n) { f.appendChild(n); }); ensureDefs().appendChild(f);
     var raf = 0, timer = 0;
     function stop() { cancelAnimationFrame(raf); clearTimeout(timer); layer.style.filter = ''; }
     return {
@@ -289,7 +267,7 @@
           fi.setAttribute('href', href); fi.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
           var r = box.getBoundingClientRect(), t0 = 0;
           var max = 2.3 * Math.sqrt(r.width * r.width + r.height * r.height) / 1.0;
-          var px = x + 8, py = y + 8; // the layer overhangs the frame by 8px
+          var px = x, py = y;
           layer.style.filter = 'url(#' + id + ')';
           ring(box, x, y, 0);
           (function step(ts) {
@@ -304,43 +282,6 @@
         }, delay || 0);
       },
       stop: stop
-    };
-  }
-
-  function makeSwap(box, src, tracker) {
-    var layer = document.createElement('img');
-    layer.className = 'nc1-swap';
-    layer.alt = '';
-    layer.setAttribute('aria-hidden', 'true');
-    layer.decoding = 'async';
-    layer.setAttribute('data-src', src);
-    box.appendChild(layer);
-    var rip = makeRipple(box, layer);
-    var last = { x: null, y: null };
-    function track(e) {
-      var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
-    }
-    (tracker || box).addEventListener('pointerenter', track);
-    (tracker || box).addEventListener('pointermove', track);
-    return {
-      layer: layer,
-      on: function (fromPointer, delay) {
-        if (layer.classList.contains('nc1-on')) return;
-        var r = box.getBoundingClientRect();
-        var x = fromPointer && last.x !== null ? last.x : r.width / 2;
-        var y = fromPointer && last.y !== null ? last.y : r.height;
-        box.style.setProperty('--nc1-rx', x + 'px');
-        box.style.setProperty('--nc1-ry', y + 'px');
-        layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
-        layer.classList.add('nc1-on');
-        // ripple sets in once the hover image has faded in; it starts from the
-        // cursor if it's over the image, otherwise from the image's center
-        var cx = (x >= 0 && x <= r.width && y >= 0 && y <= r.height) ? x : r.width / 2;
-        var cy = (x >= 0 && x <= r.width && y >= 0 && y <= r.height) ? y : r.height / 2;
-        rip.play(cx, cy, (delay || 0) + 320);
-      },
-      off: function () { rip.stop(); layer.classList.remove('nc1-on'); last.x = last.y = null; },
-      replay: function (x, y) { if (layer.classList.contains('nc1-on')) rip.play(x, y, 0); }
     };
   }
 
@@ -361,11 +302,33 @@
     });
   }
 
-  function loadSwaps(nav) {
-    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-swap[data-src]'), function (img) {
-      img.src = img.getAttribute('data-src'); img.removeAttribute('data-src');
-    });
+  // Ripple target: the column's own image (no hover image). The ripple plays
+  // when the column becomes active, from the cursor if it's over the image,
+  // otherwise from the image's center.
+  function makeRippleTarget(box, tracker) {
+    var img = box.querySelector('img') || box.querySelector('.nc1-thumb-img, .nc1-cta-img');
+    if (!img) return null;
+    var rip = makeRipple(box, img);
+    var last = { x: null, y: null }, active = false;
+    function track(e) {
+      var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
+    }
+    (tracker || box).addEventListener('pointerenter', track);
+    (tracker || box).addEventListener('pointermove', track);
+    return {
+      on: function (fromPointer, delay) {
+        if (active) return;
+        active = true;
+        var r = box.getBoundingClientRect();
+        var x = fromPointer && last.x !== null ? last.x : -1, y = fromPointer && last.y !== null ? last.y : -1;
+        var inside = x >= 0 && x <= r.width && y >= 0 && y <= r.height;
+        rip.play(inside ? x : r.width / 2, inside ? y : r.height / 2, (delay || 0) + 120);
+      },
+      off: function () { active = false; rip.stop(); last.x = last.y = null; },
+      replay: function (x, y) { if (active) rip.play(x, y, 0); }
+    };
   }
+
 
   function initFx(nav) {
     var panel = nav.querySelector('.nc1-panel');
@@ -373,29 +336,23 @@
     var cols = Array.prototype.slice.call(panel.querySelectorAll('.nc1-col'));
     var colSwaps = cols.map(function (col) {
       var thumb = col.querySelector('.nc1-thumb');
-      var img = thumb && thumb.querySelector('img');
-      var label = col.querySelector('.nc1-col-label');
-      var src = thumb && hoverSrcFor(col, img, label && label.textContent);
-      if (!src) return null;
-      var sw = makeSwap(thumb, src, col);
+      var sw = thumb && makeRippleTarget(thumb, col);
+      if (!sw) return null;
       sw.pointerIn = false;
       col.addEventListener('pointerenter', function () { sw.pointerIn = true; });
       col.addEventListener('pointerleave', function () { sw.pointerIn = false; });
       return sw;
     });
 
-    // Sidebar CTA: ripple in on hover
+    // Sidebar CTA: ripple on hover
     var cta = panel.querySelector('.nc1-cta');
     var ctaMedia = cta && cta.querySelector('.nc1-cta-media');
-    if (ctaMedia) {
-      var ctaSrc = hoverSrcFor(cta, ctaMedia.querySelector('img'), null);
-      if (ctaSrc) {
-        var csw = makeSwap(ctaMedia, ctaSrc, cta);
-        cta.addEventListener('pointerenter', function () {
-          if (DESKTOP.matches) requestAnimationFrame(function () { csw.on(true, 0); });
-        });
-        cta.addEventListener('pointerleave', function () { csw.off(); });
-      }
+    var csw = ctaMedia && makeRippleTarget(ctaMedia, cta);
+    if (csw) {
+      cta.addEventListener('pointerenter', function () {
+        if (DESKTOP.matches) requestAnimationFrame(function () { csw.on(true, 0); });
+      });
+      cta.addEventListener('pointerleave', function () { csw.off(); });
     }
 
     // Frosted backdrop
@@ -430,7 +387,6 @@
     function sync() {
       var open = has(panel, 'nc1-open');
       backdrop.classList.toggle('nc1-on', open && DESKTOP.matches);
-      if (open && !loaded) { loadSwaps(nav); loaded = true; }
       var opening = open && !wasOpen;
       var closing = !open && wasOpen;
       wasOpen = open;
@@ -462,7 +418,7 @@
         col.__nc1Active = nowActive;
         var sw = colSwaps[i];
         if (!sw) return;
-        if (nowActive) sw.on(sw.pointerIn, opening ? i * 70 : 0);
+        if (nowActive) sw.on(sw.pointerIn, opening ? i * 70 + 350 : 0);
         else sw.off();
       });
     }
