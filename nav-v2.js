@@ -1,6 +1,6 @@
 /*!
- * Savoya Nav (Concept 01) — V3 (alternate to nav.js)
- * Same as nav.js except the menu motion and image swap described below.
+ * Savoya Nav (Concept 01) — master nav script
+ * Formerly nav-v2.js. The previous version is kept as nav-v1.js for rollback.
  *
  *   - Mega-menu behavior: tabs, column/tab hover sync, item hover states,
  *     entrance-animation replay, mobile accordion.
@@ -9,18 +9,12 @@
  *     while active); title + links indent 12px only while the column is active
  *     (Figma "Savoya Menu Concept | V2: Hover State").
  *   - Pixel arrows: chevrons built from crisp 1px squares.
- *   - Menu motion (V3): the first time the menu is hovered, the active
- *     column's black panel rises from the bottom with its image reveal (0.9s
- *     ease-in-out sine); after that, columns fade to black as in V1.
- *     data-nc1-rise="open" on .nc1-nav makes it rise on every open instead.
- *   - Image ripple: when a column becomes active, a faint water ripple spreads
- *     across its image (SVG displacement, 1.8s) with a soft highlight ring;
- *     replays when the cursor enters the image. Sidebar CTA image too.
- *   - Click focus (desktop): clicking a top link focuses its column with one
- *     lap of the gold ring from .glow-card (core/cards.css); the column lifts
- *     8px with an elastic overshoot and a drop shadow, then rests with the glow.
- *     The link's href stays for SEO; on desktop the click doesn't navigate.
- *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
+ *   - Menu motion: the active column's black panel rises with its image
+ *     reveal (0.9s ease-in-out sine); text turns white as the panel passes.
+ *   - Image swap: each column's hover image crossfades in (0.35s) with a
+ *     fast, faint ripple ring from the cursor. Hover images mapped in
+ *     HOVER_IMAGES, or per column via data-nc1-hover-src. The sidebar CTA
+ *     swaps the same way on hover.
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
  *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
@@ -91,59 +85,30 @@
     '@media screen and (min-width:992px){' +
       N + '.nc1-col{position:relative;isolation:isolate;}' +
       N + '.nc1-col.nc1-active{background-color:transparent;}' +
-      // default: black fades in/out (as in V1)
       N + '.nc1-col::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;' +
-        'background:var(--nc1-black,#141313);opacity:0;clip-path:inset(0 0 0 0);transition:opacity .25s ease;}' +
-      N + '.nc1-col.nc1-active::before{opacity:1;}' +
-      // first hover only: black rises from the bottom with the image reveal
-      N + '.nc1-panel.nc1-rise-ready .nc1-col::before{opacity:1;clip-path:inset(100% 0 0 0);transition:none;}' +
-      N + '.nc1-panel.nc1-rise-ready .nc1-col.nc1-active::before,' + N + '.nc1-col.nc1-rising.nc1-active::before{' +
-        'opacity:1;clip-path:inset(0 0 0 0);transition:clip-path .9s EASE;transition-delay:var(--nc1-bg-delay,0ms);}' +
-      N + '.nc1-col.nc1-noanim::before{transition:none!important;}' +
-      // while rising, text turns white as the black passes behind it
-      [' .nc1-col-label',' .nc1-col-rule',' .nc1-link-text',' .nc1-link-arrow'].map(function (t) {
-        return N + '.nc1-panel.nc1-rise-ready .nc1-col.nc1-active' + t + ',' + N + '.nc1-col.nc1-rising.nc1-active:not(.nc1-settled)' + t;
-      }).join(',') + '{transition-delay:calc(var(--nc1-bg-delay,0ms) + var(--nc1-td,0ms));}' +
+        'background:var(--nc1-black,#141313);clip-path:inset(100% 0 0 0);' +
+        'transition:clip-path .5s EASE;transition-delay:0ms;}' +
+      N + '.nc1-col.nc1-active::before{clip-path:inset(0 0 0 0);' +
+        'transition:clip-path .9s EASE;transition-delay:var(--nc1-bg-delay,0ms);}' +
+      N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-col-label,' + N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-col-rule,' +
+        N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-link-text,' + N + '.nc1-col.nc1-active:not(.nc1-settled) .nc1-link-arrow{' +
+        'transition-delay:calc(var(--nc1-bg-delay,0ms) + var(--nc1-td,0ms));}' +
       // image reveal on the same curve and duration as the black panel
       N + '.nc1-thumb-img.fade-in.reveal-up{transition:opacity .9s EASE,transform .9s EASE,clip-path .9s EASE;}' +
       // panel stays distinct over the blurred page
       N + '.nc1-panel.nc1-open{box-shadow:0 28px 60px -24px rgba(20,19,19,.35),0 1px 0 rgba(20,19,19,.06);}' +
     '}',
 
-    // ---- Image ripple (no hover image) ----------------------------------------
+    // ---- Image swap: quick crossfade + a fast, faint ripple ring --------------
     N + '.nc1-thumb,' + N + '.nc1-cta-media{position:relative;overflow:hidden;isolation:isolate;}' +
+    N + '.nc1-swap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;' +
+      'pointer-events:none;opacity:0;transition:opacity .3s EASE;}' +
+    N + '.nc1-swap.nc1-on{opacity:1;transition:opacity .35s EASE;transition-delay:var(--nc1-rip-delay,0ms);}' +
     N + '.nc1-ring{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);z-index:2;' +
       'margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;pointer-events:none;' +
-      'border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.12);' +
-      'transform:scale(0);opacity:.75;animation:nc1-ring 1.8s cubic-bezier(.33,1,.68,1) forwards;}' +
+      'border:1px solid rgba(255,255,255,.35);' +
+      'transform:scale(0);opacity:.6;animation:nc1-ring .5s cubic-bezier(.61,1,.88,1) forwards;animation-delay:var(--nc1-rip-delay,0ms);}' +
     '@keyframes nc1-ring{to{transform:scale(1);opacity:0;}}',
-
-    // ---- Click focus halo (same ring as .glow-card in core/cards.css) -------
-    // One lap of the traveling gold ring, then it rests with the soft glow.
-    '@property --nc1-halo-a{syntax:"<angle>";inherits:false;initial-value:0deg;}',
-    '@keyframes nc1-halo-spin{from{--nc1-halo-a:0deg;}to{--nc1-halo-a:360deg;}}',
-    '@media screen and (min-width:992px){' +
-      N + '.nc1-col{transition:transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .5s ease;}' +
-      N + '.nc1-col::after{content:"";position:absolute;inset:0;z-index:2;padding:1.5px;border-radius:inherit;' +
-        'background:conic-gradient(from var(--nc1-halo-a),rgba(197,97,41,.2) 0%,#C56129 20%,#F5AD59 35%,#C56129 50%,rgba(197,97,41,.2) 70%);' +
-        '-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;' +
-        'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;' +
-        'opacity:0;pointer-events:none;transition:opacity .5s ease;}' +
-      N + '.nc1-col.nc1-halo::after{opacity:1;animation:nc1-halo-spin 3.5s linear 1 forwards;}' +
-      N + '.nc1-col.nc1-halo{transform:translateY(-8px);' +
-        'box-shadow:0 22px 40px -14px rgba(20,19,19,.55),0 0 24px rgba(245,173,89,.28),0 0 60px rgba(197,97,41,.16);}' +
-    '}',
-    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-col.nc1-halo::after{animation:none;}' + N + '.nc1-col.nc1-halo{transform:none;}}',
-
-    // ---- Tablet (768-991px): sidebar ad becomes a horizontal card ---------
-    '@media screen and (min-width:768px) and (max-width:991px){' +
-      N + '.nc1-cta{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);column-gap:24px;' +
-        'align-items:center;width:100%;max-width:none;padding:16px;}' +
-      N + '.nc1-cta > *{min-width:0;}' +
-      N + '.nc1-cta-media{grid-row:1 / span 5;grid-column:1;height:100%;aspect-ratio:4 / 3;border-radius:6px;overflow:hidden;}' +
-      N + '.nc1-cta-img{width:100%;height:100%;object-fit:cover;}' +
-      N + '.nc1-cta > :not(.nc1-cta-media){grid-column:2;}' +
-    '}',
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
     '.nc1-backdrop{position:fixed;inset:0;z-index:49;pointer-events:none;opacity:0;visibility:hidden;' +
@@ -161,7 +126,8 @@
       N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
       N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
     '}',
-    '@media (prefers-reduced-motion:reduce){' +  N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
+    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-swap{transition:opacity .2s linear!important;clip-path:none!important;opacity:0;}' +
+      N + '.nc1-swap.nc1-on{opacity:1;}' + N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
   ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
   function injectStyles() {
@@ -216,8 +182,32 @@
   }
 
   // ---- image swap (ripple) + backdrop + black-panel sync -------------------
+  var CDN = 'https://cdn.prod.website-files.com/62faa9dc6b970a350019a1cd/';
+  // Default image name -> hover image. Override per column/CTA with
+  // data-nc1-hover-src="<url>" on .nc1-col or .nc1-cta.
+  var HOVER_IMAGES = [
+    ['nav-col-company-cover-img', '6ad123499a9c302774d22cbf_nav-col-company-cover-img-hover3x.webp', 'company'],
+    ['nav-col-benefits-cover-img', '6ad1234960841e06726c4c0d_nav-col-benefits-cover-img-hover3x.webp', 'benefits'],
+    ['nav-col-who we serve-cover-img', '6ad123497bfb8ae3545954e6_nav-col-who%20we%20serve-cover-img-hover3x.webp', 'who we serve'],
+    ['nav-col-resources-cover-img', '6ad123496db79f796f89754a_nav-col-resources-cover-img-hover3x.webp', 'resources'],
+    ['nav-col-cta-img', '6ad1236c5f9e09e7b72bb316_NAV%20CTA%20Image.webp', null]
+  ];
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   var DESKTOP = window.matchMedia('(min-width: 992px)');
+
+  function hoverSrcFor(host, img, label) {
+    var own = host.getAttribute('data-nc1-hover-src');
+    if (own) return own;
+    var src = decodeURIComponent((img && (img.currentSrc || img.src)) || '').toLowerCase();
+    var lbl = (label || '').trim().toLowerCase();
+    for (var i = 0; i < HOVER_IMAGES.length; i++) {
+      if (src.indexOf(HOVER_IMAGES[i][0]) !== -1) return CDN + HOVER_IMAGES[i][1];
+    }
+    for (var j = 0; j < HOVER_IMAGES.length; j++) {
+      if (HOVER_IMAGES[j][2] && lbl === HOVER_IMAGES[j][2]) return CDN + HOVER_IMAGES[j][1];
+    }
+    return null;
+  }
 
   function ring(box, x, y, delay) {
     if (REDUCED.matches) return;
@@ -227,93 +217,37 @@
     el.className = 'nc1-ring';
     el.style.cssText = '--x:' + x + 'px;--y:' + y + 'px;--d:' + d + 'px;' + (delay ? '--nc1-rip-delay:' + delay + 'ms;' : '');
     box.appendChild(el);
-    setTimeout(function () { el.remove(); }, 2000 + (delay || 0));
+    setTimeout(function () { el.remove(); }, 700 + (delay || 0));
   }
 
-  // ---- water ripple: concentric displacement map, expanded from a point ----
-  var RIPPLE_MS = 1800, RIPPLE_SCALE = 6;
-  var rippleMap = null, svgDefs = null, rippleId = 0;
-  function getRippleMap() {
-    if (rippleMap) return rippleMap;
-    var n = 512, c = document.createElement('canvas'); c.width = c.height = n;
-    var g = c.getContext('2d'), img = g.createImageData(n, n), d = img.data;
-    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
-      var dx = (x + 0.5) / n * 2 - 1, dy = (y + 0.5) / n * 2 - 1, r = Math.sqrt(dx * dx + dy * dy);
-      var w = 0;
-      if (r < 1 && r > 0.0001) {
-        var env = Math.sin(Math.PI * Math.min(1, Math.max(0, (r - 0.35) / 0.65)));   // wave band near the front
-        w = Math.sin(r * Math.PI * 5) * env * env;
-      }
-      var k = (y * n + x) * 4, ux = r ? dx / r : 0, uy = r ? dy / r : 0;
-      d[k] = 128 + 127 * w * ux; d[k + 1] = 128 + 127 * w * uy; d[k + 2] = 128; d[k + 3] = 255;
+  function makeSwap(box, src, tracker) {
+    var layer = document.createElement('img');
+    layer.className = 'nc1-swap';
+    layer.alt = '';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.decoding = 'async';
+    layer.setAttribute('data-src', src);
+    box.appendChild(layer);
+    var last = { x: null, y: null };
+    function track(e) {
+      var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
     }
-    g.putImageData(img, 0, 0);
-    rippleMap = c.toDataURL('image/png');
-    return rippleMap;
-  }
-  function ensureDefs() {
-    if (svgDefs) return svgDefs;
-    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden');
-    svgDefs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    svg.appendChild(svgDefs); document.body.appendChild(svg);
-    return svgDefs;
-  }
-  function makeRipple(box, layer) {
-    var NS = 'http://www.w3.org/2000/svg', id = 'nc1-ripple-' + (++rippleId);
-    var f = document.createElementNS(NS, 'filter');
-    f.setAttribute('id', id); f.setAttribute('x', '0'); f.setAttribute('y', '0');
-    f.setAttribute('width', '100%'); f.setAttribute('height', '100%');
-    f.setAttribute('color-interpolation-filters', 'sRGB');
-    // neutral grey everywhere (= no displacement), the ripple map on top,
-    // then a light blur to smooth the 8-bit steps
-    var flood = document.createElementNS(NS, 'feFlood');
-    flood.setAttribute('flood-color', 'rgb(128,128,128)'); flood.setAttribute('result', 'bg');
-    var fi = document.createElementNS(NS, 'feImage');
-    fi.setAttribute('preserveAspectRatio', 'none'); fi.setAttribute('result', 'img');
-    var merge = document.createElementNS(NS, 'feMerge'); merge.setAttribute('result', 'raw');
-    ['bg', 'img'].forEach(function (n) {
-      var mn = document.createElementNS(NS, 'feMergeNode'); mn.setAttribute('in', n); merge.appendChild(mn);
-    });
-    var blur = document.createElementNS(NS, 'feGaussianBlur');
-    blur.setAttribute('in', 'raw'); blur.setAttribute('stdDeviation', '1.5'); blur.setAttribute('result', 'map');
-    var fd = document.createElementNS(NS, 'feDisplacementMap');
-    fd.setAttribute('in', 'SourceGraphic'); fd.setAttribute('in2', 'map');
-    fd.setAttribute('result', 'warped');
-    // where the wave pulls in pixels from outside the image, show the original
-    var under = document.createElementNS(NS, 'feMerge');
-    ['SourceGraphic', 'warped'].forEach(function (n) {
-      var mn = document.createElementNS(NS, 'feMergeNode'); mn.setAttribute('in', n); under.appendChild(mn);
-    });
-    fd.setAttribute('xChannelSelector', 'R'); fd.setAttribute('yChannelSelector', 'G');
-    [flood, fi, merge, blur, fd, under].forEach(function (n) { f.appendChild(n); }); ensureDefs().appendChild(f);
-    var raf = 0, timer = 0;
-    function stop() { cancelAnimationFrame(raf); clearTimeout(timer); layer.style.filter = ''; }
+    (tracker || box).addEventListener('pointerenter', track);
+    (tracker || box).addEventListener('pointermove', track);
     return {
-      play: function (x, y, delay) {
-        stop();
-        if (REDUCED.matches) return;
-        timer = setTimeout(function () {
-          var href = getRippleMap();
-          fi.setAttribute('href', href); fi.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
-          var r = box.getBoundingClientRect(), t0 = 0;
-          var max = 2.3 * Math.sqrt(r.width * r.width + r.height * r.height) / 1.0;
-          var px = x, py = y;
-          layer.style.filter = 'url(#' + id + ')';
-          ring(box, x, y, 0);
-          (function step(ts) {
-            if (!t0) t0 = ts;
-            var t = Math.min(1, (ts - t0) / RIPPLE_MS), e = Math.sin(t * Math.PI / 2);
-            var size = Math.max(1, max * e);
-            fi.setAttribute('x', px - size / 2); fi.setAttribute('y', py - size / 2);
-            fi.setAttribute('width', size); fi.setAttribute('height', size);
-            fd.setAttribute('scale', (RIPPLE_SCALE * (1 - t)).toFixed(2));
-            if (t < 1) raf = requestAnimationFrame(step); else layer.style.filter = '';
-          })(performance.now());
-        }, delay || 0);
+      layer: layer,
+      on: function (fromPointer, delay) {
+        if (layer.classList.contains('nc1-on')) return;
+        var r = box.getBoundingClientRect();
+        var x = fromPointer && last.x !== null ? last.x : r.width / 2;
+        var y = fromPointer && last.y !== null ? last.y : r.height;
+        box.style.setProperty('--nc1-rx', x + 'px');
+        box.style.setProperty('--nc1-ry', y + 'px');
+        layer.style.setProperty('--nc1-rip-delay', (delay || 0) + 'ms');
+        layer.classList.add('nc1-on');
+        ring(box, x, y, delay);
       },
-      stop: stop
+      off: function () { layer.classList.remove('nc1-on'); last.x = last.y = null; }
     };
   }
 
@@ -334,33 +268,11 @@
     });
   }
 
-  // Ripple target: the column's own image (no hover image). The ripple plays
-  // when the column becomes active, from the cursor if it's over the image,
-  // otherwise from the image's center.
-  function makeRippleTarget(box, tracker) {
-    var img = box.querySelector('img') || box.querySelector('.nc1-thumb-img, .nc1-cta-img');
-    if (!img) return null;
-    var rip = makeRipple(box, img);
-    var last = { x: null, y: null }, active = false;
-    function track(e) {
-      var r = box.getBoundingClientRect(); last.x = e.clientX - r.left; last.y = e.clientY - r.top;
-    }
-    (tracker || box).addEventListener('pointerenter', track);
-    (tracker || box).addEventListener('pointermove', track);
-    return {
-      on: function (fromPointer, delay) {
-        if (active) return;
-        active = true;
-        var r = box.getBoundingClientRect();
-        var x = fromPointer && last.x !== null ? last.x : -1, y = fromPointer && last.y !== null ? last.y : -1;
-        var inside = x >= 0 && x <= r.width && y >= 0 && y <= r.height;
-        rip.play(inside ? x : r.width / 2, inside ? y : r.height / 2, (delay || 0) + 120);
-      },
-      off: function () { active = false; rip.stop(); last.x = last.y = null; },
-      replay: function (x, y) { if (active) rip.play(x, y, 0); }
-    };
+  function loadSwaps(nav) {
+    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-swap[data-src]'), function (img) {
+      img.src = img.getAttribute('data-src'); img.removeAttribute('data-src');
+    });
   }
-
 
   function initFx(nav) {
     var panel = nav.querySelector('.nc1-panel');
@@ -368,23 +280,29 @@
     var cols = Array.prototype.slice.call(panel.querySelectorAll('.nc1-col'));
     var colSwaps = cols.map(function (col) {
       var thumb = col.querySelector('.nc1-thumb');
-      var sw = thumb && makeRippleTarget(thumb, col);
-      if (!sw) return null;
+      var img = thumb && thumb.querySelector('img');
+      var label = col.querySelector('.nc1-col-label');
+      var src = thumb && hoverSrcFor(col, img, label && label.textContent);
+      if (!src) return null;
+      var sw = makeSwap(thumb, src, col);
       sw.pointerIn = false;
       col.addEventListener('pointerenter', function () { sw.pointerIn = true; });
       col.addEventListener('pointerleave', function () { sw.pointerIn = false; });
       return sw;
     });
 
-    // Sidebar CTA: ripple on hover
+    // Sidebar CTA: ripple in on hover
     var cta = panel.querySelector('.nc1-cta');
     var ctaMedia = cta && cta.querySelector('.nc1-cta-media');
-    var csw = ctaMedia && makeRippleTarget(ctaMedia, cta);
-    if (csw) {
-      cta.addEventListener('pointerenter', function () {
-        if (DESKTOP.matches) requestAnimationFrame(function () { csw.on(true, 0); });
-      });
-      cta.addEventListener('pointerleave', function () { csw.off(); });
+    if (ctaMedia) {
+      var ctaSrc = hoverSrcFor(cta, ctaMedia.querySelector('img'), null);
+      if (ctaSrc) {
+        var csw = makeSwap(ctaMedia, ctaSrc, cta);
+        cta.addEventListener('pointerenter', function () {
+          if (DESKTOP.matches) requestAnimationFrame(function () { csw.on(true, 0); });
+        });
+        cta.addEventListener('pointerleave', function () { csw.off(); });
+      }
     }
 
     // Frosted backdrop
@@ -393,97 +311,63 @@
     backdrop.setAttribute('aria-hidden', 'true');
     document.body.appendChild(backdrop);
 
-    // Black panel: rises from the bottom on the first hover only, then fades.
-    // RISE_ONCE = 'page' -> once per page view; 'open' -> every time the menu opens.
-    var RISE_ONCE = nav.getAttribute('data-nc1-rise') === 'open' ? 'open' : 'page';
-    function has(el, c) { return el.classList.contains(c); }
-    function add(el, c) { if (!has(el, c)) el.classList.add(c); }
-    function rem(el, c) { if (has(el, c)) el.classList.remove(c); }
-    function armRise() {
-      cols.forEach(function (col, i) { col.style.setProperty('--nc1-bg-delay', (i * 70) + 'ms'); });
-      add(panel, 'nc1-rise-ready');
-    }
-    function disarmRise() {
-      var idle = cols.filter(function (c) { return !has(c, 'nc1-active'); });
-      idle.forEach(function (c) { add(c, 'nc1-noanim'); });
-      rem(panel, 'nc1-rise-ready');
-      void panel.offsetWidth; // switch idle columns to fade mode without animating
-      idle.forEach(function (c) { rem(c, 'nc1-noanim'); });
-    }
-    function measureAll() { cols.forEach(measureTextDelays); }
-    if (document.readyState === 'complete') measureAll(); else window.addEventListener('load', measureAll);
-    window.addEventListener('resize', measureAll);
-    armRise();
-
     var wasOpen = false, openTimer = null, loaded = false;
     function sync() {
-      var open = has(panel, 'nc1-open');
+      var open = panel.classList.contains('nc1-open');
       backdrop.classList.toggle('nc1-on', open && DESKTOP.matches);
+      if (open && !loaded) { loadSwaps(nav); loaded = true; }
       var opening = open && !wasOpen;
-      var closing = !open && wasOpen;
       wasOpen = open;
       if (opening) {
+        cols.forEach(measureTextDelays);
+        // Same stagger as nav.js's entrance (70ms per column): the black panel
+        // rises with that column's image; the swap ripples once it is up.
+        cols.forEach(function (col, i) {
+          col.style.setProperty('--nc1-bg-delay', (i * 70) + 'ms');
+        });
         clearTimeout(openTimer);
-        openTimer = setTimeout(function () { opening = false; }, 1400);
+        openTimer = setTimeout(function () {
+          cols.forEach(function (col) { col.style.removeProperty('--nc1-bg-delay'); });
+          opening = false;
+        }, 1400);
       }
-      if (closing && RISE_ONCE === 'open') armRise();
-
-      // First activation while armed: that column rises; everything after fades.
-      if (open && DESKTOP.matches && has(panel, 'nc1-rise-ready')) {
-        var first = cols.filter(function (c) { return has(c, 'nc1-active'); })[0];
-        if (first) {
-          add(first, 'nc1-rising');
-          var idx = cols.indexOf(first);
-          clearTimeout(first.__nc1Settle);
-          first.__nc1Settle = setTimeout(function () { add(first, 'nc1-settled'); },
-            idx * 70 + RISE_MS + 100);
-          disarmRise();
-        }
-      }
-
       cols.forEach(function (col, i) {
-        var nowActive = open && DESKTOP.matches && has(col, 'nc1-active');
-        if (!nowActive && col.__nc1Active) {
+        var nowActive = open && DESKTOP.matches && col.classList.contains('nc1-active');
+        if (nowActive && !col.__nc1Active) {
           clearTimeout(col.__nc1Settle);
-          rem(col, 'nc1-rising'); rem(col, 'nc1-settled');
+          col.__nc1Settle = setTimeout(function () {
+            if (!col.classList.contains('nc1-settled')) col.classList.add('nc1-settled');
+          },
+            (opening ? i * 70 : 0) + RISE_MS + 100);
+        } else if (!nowActive) {
+          clearTimeout(col.__nc1Settle);
+          if (col.classList.contains('nc1-settled')) col.classList.remove('nc1-settled');
         }
-        if (!nowActive) rem(col, 'nc1-halo');
         col.__nc1Active = nowActive;
         var sw = colSwaps[i];
         if (!sw) return;
-        if (nowActive) sw.on(sw.pointerIn, opening ? i * 70 + 350 : 0);
+        var active = nowActive;
+        if (active) sw.on(sw.pointerIn, opening ? i * 70 : 0);
         else sw.off();
       });
     }
-    colSwaps.forEach(function (sw, i) {
-      if (!sw) return;
-      var thumb = cols[i].querySelector('.nc1-thumb');
-      thumb.addEventListener('pointerenter', function (e) {
-        var r = thumb.getBoundingClientRect();
-        sw.replay(e.clientX - r.left, e.clientY - r.top);
-      });
-    });
-    // Clicking (or pressing Enter on) a top link focuses its column with the
-    // gold halo instead of navigating. The href stays for crawlers and no-JS.
-    function halo(col) {
-      cols.forEach(function (c) { if (c !== col) rem(c, 'nc1-halo'); });
-      rem(col, 'nc1-halo');
-      void col.offsetWidth; // restart the lap on repeat clicks
-      add(col, 'nc1-halo');
-    }
-    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-tab'), function (tab, i) {
-      tab.addEventListener('click', function (e) {
-        if (!DESKTOP.matches || !cols[i]) return;
-        e.preventDefault();
-        setTimeout(function () {
-          if (has(panel, 'nc1-open') && has(cols[i], 'nc1-active')) halo(cols[i]);
-        }, 0);
-      });
+    window.addEventListener('resize', function () {
+      if (panel.classList.contains('nc1-open')) cols.forEach(measureTextDelays);
     });
     var mo = new MutationObserver(sync);
     mo.observe(panel, { attributes: true, attributeFilter: ['class'] });
     cols.forEach(function (col) { mo.observe(col, { attributes: true, attributeFilter: ['class'] }); });
 
+    // Ripple ring when the pointer enters an image that's already swapped
+    colSwaps.forEach(function (sw, i) {
+      if (!sw) return;
+      var thumb = cols[i].querySelector('.nc1-thumb');
+      thumb.addEventListener('pointerenter', function (e) {
+        if (!sw.layer.classList.contains('nc1-on')) return;
+        var r = thumb.getBoundingClientRect();
+        ring(thumb, e.clientX - r.left, e.clientY - r.top, 0);
+      });
+    });
   }
 
   function initV2(nav) {
