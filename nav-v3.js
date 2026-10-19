@@ -17,7 +17,8 @@
  *     across its image (SVG displacement, 1.8s) with a soft highlight ring;
  *     replays when the cursor enters the image. Sidebar CTA image too.
  *   - Click focus (desktop): clicking a top link focuses its column with one
- *     lap of the gold ring from .glow-card (core/cards.css), then a soft glow.
+ *     lap of the gold ring from .glow-card (core/cards.css); the column lifts
+ *     8px with an elastic overshoot and a drop shadow, then rests with the glow.
  *     The link's href stays for SEO; on desktop the click doesn't navigate.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
@@ -122,16 +123,17 @@
     '@property --nc1-halo-a{syntax:"<angle>";inherits:false;initial-value:0deg;}',
     '@keyframes nc1-halo-spin{from{--nc1-halo-a:0deg;}to{--nc1-halo-a:360deg;}}',
     '@media screen and (min-width:992px){' +
-      N + '.nc1-col{transition:box-shadow .5s ease;}' +
+      N + '.nc1-col{transition:transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .5s ease;}' +
       N + '.nc1-col::after{content:"";position:absolute;inset:0;z-index:2;padding:1.5px;border-radius:inherit;' +
         'background:conic-gradient(from var(--nc1-halo-a),rgba(197,97,41,.2) 0%,#C56129 20%,#F5AD59 35%,#C56129 50%,rgba(197,97,41,.2) 70%);' +
         '-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;' +
         'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;' +
         'opacity:0;pointer-events:none;transition:opacity .5s ease;}' +
       N + '.nc1-col.nc1-halo::after{opacity:1;animation:nc1-halo-spin 3.5s linear 1 forwards;}' +
-      N + '.nc1-col.nc1-halo{box-shadow:0 0 24px rgba(245,173,89,.28),0 0 60px rgba(197,97,41,.16);}' +
+      N + '.nc1-col.nc1-halo{transform:translateY(-8px);' +
+        'box-shadow:0 22px 40px -14px rgba(20,19,19,.55),0 0 24px rgba(245,173,89,.28),0 0 60px rgba(197,97,41,.16);}' +
     '}',
-    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-col.nc1-halo::after{animation:none;}}',
+    '@media (prefers-reduced-motion:reduce){' + N + '.nc1-col.nc1-halo::after{animation:none;}' + N + '.nc1-col.nc1-halo{transform:none;}}',
 
     // ---- Tablet (768-991px): sidebar ad becomes a horizontal card ---------
     '@media screen and (min-width:768px) and (max-width:991px){' +
