@@ -20,6 +20,9 @@
  *     lap of the gold ring from .glow-card (core/cards.css); the column lifts
  *     8px with an elastic overshoot and a drop shadow, then rests with the glow.
  *     The link's href stays for SEO; on desktop the click doesn't navigate.
+ *   - Current section: while the menu is closed, the top link whose category
+ *     holds the current page (its page, column heading, a link, or a page
+ *     nested under one, like /blog/post) keeps its active/hover underline.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
@@ -613,9 +616,38 @@
       });
     });
 
+    // ---- current section ("you are here") ---------------------------------
+    // A tab keeps its active (hover) look while the menu is closed if the
+    // current page is that tab's page, its column heading, one of its links,
+    // or a page nested under one of those (e.g. /blog/post under /blog).
+    function cleanPath(p) {
+      p = (p || '/').toLowerCase().replace(/\/+$/, '');
+      return p || '/';
+    }
+    function sameSite(a) { return a && a.href && a.host === location.host; }
+    var herePath = cleanPath(location.pathname);
+    function isHere(a) {
+      if (!sameSite(a)) return false;
+      var p = cleanPath(a.pathname);
+      if (p === '/') return herePath === '/';
+      return herePath === p || herePath.indexOf(p + '/') === 0;
+    }
+    var currentTabs = tabs.map(function (tab, i) {
+      var col = cols[i];
+      var links = [tab].concat(col ? $$('.nc1-col-head, .nc1-link', col) : []);
+      var match = false;
+      links.forEach(function (a) {
+        if (!isHere(a)) return;
+        match = true;
+        if (cleanPath(a.pathname) === herePath && a !== tab) a.setAttribute('aria-current', 'page');
+      });
+      return match;
+    });
+
     function setActiveTab(index) {
       tabs.forEach(function (tab, i) {
-        var on = i === index;
+        // Open: follow the pointer. Closed (index -1): show the current section.
+        var on = index < 0 ? currentTabs[i] : i === index;
         toggle($('.nc1-tab-text', tab), 'nc1-active', on);
         toggle($('.nc1-tab-line', tab), 'nc1-active', on);
         tab.setAttribute('aria-expanded', on && isOpen ? 'true' : 'false');
