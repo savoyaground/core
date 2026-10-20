@@ -26,6 +26,7 @@
  *   - Round 2 feedback: round Close (X) button after Book Now while the menu
  *     is open (desktop); hamburger turns into an X (mobile); mega menu text
  *     10% smaller on desktop; link arrows only on hover; hover sound removed.
+ *   - Active column panel is charcoal (#2a2826); override with --nc1-col-bg.
  *   - Lite mode (Windows, or any computer whose first menu open drops frames):
  *     light ring instead of the water ripple, tinted backdrop without blur.
  *     Force with ?nc1-lite=1 or ?nc1-lite=0. Backdrop blur is 6px otherwise.
@@ -98,7 +99,7 @@
       N + '.nc1-col.nc1-active{background-color:transparent;}' +
       // default: black fades in/out (as in V1)
       N + '.nc1-col::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;' +
-        'background:var(--nc1-black,#141313);opacity:0;clip-path:inset(0 0 0 0);transition:opacity .25s ease;}' +
+        'background:var(--nc1-col-bg,#2a2826);opacity:0;clip-path:inset(0 0 0 0);transition:opacity .25s ease;}' +
       N + '.nc1-col.nc1-active::before{opacity:1;}' +
       // first hover only: black rises from the bottom with the image reveal
       N + '.nc1-panel.nc1-rise-ready .nc1-col::before{opacity:1;clip-path:inset(100% 0 0 0);transition:none;}' +
