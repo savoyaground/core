@@ -174,20 +174,19 @@
     // not "opens more links". The hover arrow slides in from the left as before.
     N + '.nc1-col .nc1-link-arrow{opacity:0;}',
     // Close button (desktop): a soft raised (neumorphic) round button with a
-    // plain X, shown after Book Now while the menu is open. At rest it has a
-    // light rim on the top left and a shadow on the bottom right; on hover it
+    // plain X, shown after Book Now while the menu is open. White like the bar,
+    // so at rest only its soft shadow on the bottom right lifts it; on hover it
     // presses in. A "Close nav" tooltip follows the pointer inside the button.
     N + '.nc1-close{display:none;}' +
     '@media screen and (min-width:992px){' +
       N + '.nc1-close{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
         'width:0;height:40px;margin-left:-12px;padding:0;border:0;border-radius:999px;cursor:pointer;' +
-        'color:var(--text,#141313);background:linear-gradient(145deg,#f7f6f4,#e9e6e2);opacity:0;pointer-events:none;' +
-        'box-shadow:inset 1.5px 1.5px 1px rgba(255,255,255,1),inset -1px -1px 2px rgba(20,19,19,.06),' +
-          '-3px -3px 7px rgba(255,255,255,.9),4px 5px 10px rgba(20,19,19,.2);' +
-        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease,background .25s ease;}' +
+        'color:var(--text,#141313);background:#fff;opacity:0;pointer-events:none;' +
+        'box-shadow:inset -1px -1px 2px rgba(20,19,19,.06),-3px -3px 7px rgba(255,255,255,.9),4px 5px 10px rgba(20,19,19,.2);' +
+        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease;}' +
       N + '.nc1-close svg{width:13px;height:13px;flex:none;display:block;transition:transform .25s ease;}' +
       '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:40px;margin-left:0;opacity:1;pointer-events:auto;}' +
-      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{background:linear-gradient(145deg,#e9e6e2,#f3f1ee);' +
+      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{background:#fff;' +
         'box-shadow:inset 3px 3px 6px rgba(20,19,19,.18),inset -3px -3px 6px rgba(255,255,255,.95);}' +
       N + '.nc1-close:hover svg,' + N + '.nc1-close:focus-visible svg{transform:scale(.92);}' +
       N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:3px;}' +
