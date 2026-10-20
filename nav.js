@@ -124,6 +124,8 @@
     // One lap of the traveling gold ring, then it rests with the soft glow.
     '@property --nc1-halo-a{syntax:"<angle>";inherits:false;initial-value:0deg;}',
     '@keyframes nc1-halo-spin{from{--nc1-halo-a:0deg;}to{--nc1-halo-a:360deg;}}',
+    '@keyframes nc1-close-ringfade{to{opacity:0;}}',
+    '@keyframes nc1-close-glow{0%{filter:drop-shadow(0 0 7px rgba(245,173,89,.35));}100%{filter:drop-shadow(0 0 0 rgba(245,173,89,0));}}',
     '@media screen and (min-width:992px){' +
       N + '.nc1-col{transition:transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .5s ease;}' +
       N + '.nc1-col::after{content:"";position:absolute;inset:0;z-index:2;padding:1.5px;border-radius:inherit;' +
@@ -174,7 +176,8 @@
     // not "opens more links". The hover arrow slides in from the left as before.
     N + '.nc1-col .nc1-link-arrow{opacity:0;}',
     // Close button (desktop): a soft raised (neumorphic) round button with a
-    // plain X, shown after Book Now while the menu is open. White like the bar,
+    // plain X, shown after Book Now while the menu is open; a gold ring runs one
+    // lap as it appears. White like the bar,
     // so at rest only its soft shadow on the bottom right lifts it; on hover it
     // presses in. A "Close nav" tooltip follows the pointer inside the button.
     N + '.nc1-close{display:none;}' +
@@ -182,14 +185,24 @@
       N + '.nc1-close{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
         'width:0;height:40px;margin-left:-12px;padding:0;border:0;border-radius:999px;cursor:pointer;' +
         'color:var(--text,#141313);background:#fff;opacity:0;pointer-events:none;' +
-        'box-shadow:inset -1px -1px 2px rgba(20,19,19,.06),-3px -3px 7px rgba(255,255,255,.9),4px 5px 10px rgba(20,19,19,.2);' +
+        'box-shadow:inset -1px -1px 2px rgba(20,19,19,.07),-3px -3px 8px rgba(255,255,255,.9),5px 6px 14px rgba(20,19,19,.28),1px 1px 3px rgba(20,19,19,.12);' +
         'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease;}' +
-      N + '.nc1-close svg{width:13px;height:13px;flex:none;display:block;transition:transform .25s ease;}' +
+      N + '.nc1-close svg{width:14px;height:14px;flex:none;display:block;transition:transform .25s ease;}' +
       '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:40px;margin-left:0;opacity:1;pointer-events:auto;}' +
       N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{background:#fff;' +
-        'box-shadow:inset 3px 3px 6px rgba(20,19,19,.18),inset -3px -3px 6px rgba(255,255,255,.95);}' +
+        'box-shadow:inset 3px 3px 7px rgba(20,19,19,.22),inset -3px -3px 6px rgba(255,255,255,.95);}' +
       N + '.nc1-close:hover svg,' + N + '.nc1-close:focus-visible svg{transform:scale(.92);}' +
       N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:3px;}' +
+      // gold ring: one lap each time the menu opens, then it and the glow fade; hidden on hover
+      N + '.nc1-close::before{content:"";position:absolute;inset:-3px;border-radius:inherit;padding:1.5px;pointer-events:none;opacity:0;' +
+        'background:conic-gradient(from var(--nc1-halo-a),rgba(197,97,41,0) 0%,#C56129 18%,#F5AD59 32%,#C56129 46%,rgba(197,97,41,0) 64%,rgba(197,97,41,0) 100%);' +
+        '-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;' +
+        'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;}' +
+      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close::before{opacity:1;' +
+        'animation:nc1-halo-spin 2s EASE .3s 1 both,nc1-close-ringfade .5s ease 2.3s forwards;}' +
+      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{animation:nc1-close-glow 2.8s ease .3s 1 both;}' +
+      N + '.nc1-close:hover::before,' + N + '.nc1-close:focus-visible::before{visibility:hidden;}' +
+      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{filter:none!important;}' +
       // tooltip: follows the pointer, sitting just below-left of it (--nc1-tx/--nc1-ty set by
       // script) so it never runs off the right edge; centered below for keyboard focus
       N + '.nc1-close::after{content:attr(data-tip);position:absolute;left:var(--nc1-tx,50%);top:var(--nc1-ty,calc(100% + 6px));z-index:60;' +
@@ -208,6 +221,7 @@
       N + '.nc1-bl-mid.nc1-open{opacity:0;}' +
       N + '.nc1-bl-bot.nc1-open{transform:translateY(-7px) rotate(-45deg);}' +
     '}',
+    '@media (prefers-reduced-motion:reduce){.nc1-nav.nc1-v2.nc1-menu-open .nc1-close::before{animation:none;opacity:0;}.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{animation:none;}}',
     '@media (prefers-reduced-motion:reduce){' +  N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
   ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
