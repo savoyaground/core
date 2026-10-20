@@ -26,6 +26,9 @@
  *   - Round 2 feedback: round Close (X) button after Book Now while the menu
  *     is open (desktop); hamburger turns into an X (mobile); mega menu text
  *     10% smaller on desktop; link arrows only on hover; hover sound removed.
+ *   - Lite mode (Windows, or any computer whose first menu open drops frames):
+ *     light ring instead of the water ripple, tinted backdrop without blur.
+ *     Force with ?nc1-lite=1 or ?nc1-lite=0. Backdrop blur is 6px otherwise.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
@@ -151,10 +154,11 @@
 
     // ---- Frosted backdrop behind the open menu (desktop) -------------------
     '.nc1-backdrop{position:fixed;inset:0;z-index:49;pointer-events:none;opacity:0;visibility:hidden;' +
-      'background:rgba(20,19,19,.16);-webkit-backdrop-filter:blur(10px) saturate(1.05);backdrop-filter:blur(10px) saturate(1.05);' +
+      'background:rgba(20,19,19,.16);-webkit-backdrop-filter:blur(6px) saturate(1.05);backdrop-filter:blur(6px) saturate(1.05);' +
       'transition:opacity .45s EASE,visibility 0s linear .45s;}' +
     '.nc1-backdrop.nc1-on{opacity:1;visibility:visible;transition:opacity .45s EASE,visibility 0s;}' +
     '@media screen and (max-width:991px){.nc1-backdrop{display:none;}}',
+    '.nc1-lite .nc1-backdrop{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(20,19,19,.22);}',
 
     // ---- Typography above 1920px: same size at 1920, ~1/3 the growth after --
     '@media screen and (min-width:1921px){' +
@@ -237,6 +241,44 @@
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   var DESKTOP = window.matchMedia('(min-width: 992px)');
 
+  // ---- lite mode ------------------------------------------------------------
+  // Lite = light ring only (no water distortion) and a tinted backdrop with no
+  // blur. On for Windows (weaker graphics on many laptops), and for any other
+  // computer whose first menu open drops frames. ?nc1-lite=1 / ?nc1-lite=0 in
+  // the URL forces it on or off for testing.
+  var LITE_KEY = 'nc1-lite';
+  var lite = false;
+  function setLite(on) {
+    lite = !!on;
+    document.documentElement.classList.toggle('nc1-lite', lite);
+  }
+  (function () {
+    var force = /[?&]nc1-lite=([01])/.exec(location.search);
+    if (force) { setLite(force[1] === '1'); setLite.forced = true; return; }
+    var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '';
+    var saved = null;
+    try { saved = sessionStorage.getItem(LITE_KEY); } catch (e) {}
+    setLite(/win/i.test(plat) || saved === '1');
+  })();
+  // Times ~40 frames while the menu first opens; if the computer is struggling,
+  // switch to lite for the rest of the visit.
+  function checkFrames() {
+    if (lite || setLite.forced || checkFrames.done) return;
+    checkFrames.done = true;
+    var last = 0, gaps = [];
+    (function tick(ts) {
+      if (last) gaps.push(ts - last);
+      last = ts;
+      if (gaps.length < 40) { requestAnimationFrame(tick); return; }
+      var slow = gaps.filter(function (g) { return g > 25; }).length;
+      var sorted = gaps.slice().sort(function (a, b) { return a - b; });
+      if (slow >= 8 || sorted[20] > 22) {
+        setLite(true);
+        try { sessionStorage.setItem(LITE_KEY, '1'); } catch (e) {}
+      }
+    })(0);
+  }
+
   function ring(box, x, y, delay) {
     if (REDUCED.matches) return;
     var r = box.getBoundingClientRect();
@@ -253,7 +295,7 @@
   var rippleMap = null, svgDefs = null, rippleId = 0;
   function getRippleMap() {
     if (rippleMap) return rippleMap;
-    var n = 512, c = document.createElement('canvas'); c.width = c.height = n;
+    var n = 256, c = document.createElement('canvas'); c.width = c.height = n;
     var g = c.getContext('2d'), img = g.createImageData(n, n), d = img.data;
     for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
       var dx = (x + 0.5) / n * 2 - 1, dy = (y + 0.5) / n * 2 - 1, r = Math.sqrt(dx * dx + dy * dy);
@@ -313,6 +355,7 @@
         stop();
         if (REDUCED.matches) return;
         timer = setTimeout(function () {
+          if (lite) { ring(box, x, y, 0); return; }
           var href = getRippleMap();
           fi.setAttribute('href', href); fi.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
           var r = box.getBoundingClientRect(), t0 = 0;
@@ -405,6 +448,10 @@
       cta.addEventListener('pointerleave', function () { csw.off(); });
     }
 
+    // Prepare the ripple map in idle time, so the first ripple doesn't hitch.
+    var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1500); };
+    window.addEventListener('load', function () { idle(function () { if (!lite) getRippleMap(); }); });
+
     // Frosted backdrop
     var backdrop = document.createElement('div');
     backdrop.className = 'nc1-backdrop';
@@ -441,6 +488,7 @@
       var closing = !open && wasOpen;
       wasOpen = open;
       if (opening) {
+        if (DESKTOP.matches) checkFrames();
         clearTimeout(openTimer);
         openTimer = setTimeout(function () { opening = false; }, 1400);
       }
