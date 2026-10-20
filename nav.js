@@ -173,31 +173,33 @@
     // Menu link arrows show only on hover, so they read as "go to page",
     // not "opens more links". The hover arrow slides in from the left as before.
     N + '.nc1-col .nc1-link-arrow{opacity:0;}',
-    // Close button (desktop): a raised, soft (neumorphic) round button that
-    // slides in after Book Now while the menu is open. Hover presses it in and
-    // shows a "Close nav" tooltip underneath.
+    // Close button (desktop): a soft raised (neumorphic) round button with a
+    // plain X, shown after Book Now while the menu is open. At rest it has a
+    // light rim on the top left and a shadow on the bottom right; on hover it
+    // presses in. A "Close nav" tooltip follows the pointer inside the button.
     N + '.nc1-close{display:none;}' +
     '@media screen and (min-width:992px){' +
       N + '.nc1-close{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
         'width:0;height:40px;margin-left:-12px;padding:0;border:0;border-radius:999px;cursor:pointer;' +
-        'color:#fff;background:#eceae7;opacity:0;pointer-events:none;' +
-        'box-shadow:-4px -4px 8px rgba(255,255,255,.95),4px 4px 10px rgba(20,19,19,.16);' +
-        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease;}' +
-      N + '.nc1-close svg{width:24px;height:24px;flex:none;display:block;transition:transform .25s ease;}' +
-      N + '.nc1-close .nc1-close-disc{fill:#8a8580;transition:fill .25s ease;}' +
+        'color:var(--text,#141313);background:linear-gradient(145deg,#f7f6f4,#e9e6e2);opacity:0;pointer-events:none;' +
+        'box-shadow:inset 1.5px 1.5px 1px rgba(255,255,255,1),inset -1px -1px 2px rgba(20,19,19,.06),' +
+          '-3px -3px 7px rgba(255,255,255,.9),4px 5px 10px rgba(20,19,19,.2);' +
+        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease,background .25s ease;}' +
+      N + '.nc1-close svg{width:13px;height:13px;flex:none;display:block;transition:transform .25s ease;}' +
       '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:40px;margin-left:0;opacity:1;pointer-events:auto;}' +
-      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{' +
-        'box-shadow:inset 3px 3px 7px rgba(20,19,19,.18),inset -3px -3px 7px rgba(255,255,255,.95);}' +
+      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{background:linear-gradient(145deg,#e9e6e2,#f3f1ee);' +
+        'box-shadow:inset 3px 3px 6px rgba(20,19,19,.18),inset -3px -3px 6px rgba(255,255,255,.95);}' +
       N + '.nc1-close:hover svg,' + N + '.nc1-close:focus-visible svg{transform:scale(.92);}' +
-      N + '.nc1-close:hover .nc1-close-disc{fill:#6b6560;}' +
       N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:3px;}' +
-      // tooltip
-      N + '.nc1-close::after{content:attr(data-tip);position:absolute;top:calc(100% + 10px);left:50%;z-index:60;' +
-        'transform:translate(-50%,-4px);padding:6px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;' +
+      // tooltip: follows the pointer, sitting just below-left of it (--nc1-tx/--nc1-ty set by
+      // script) so it never runs off the right edge; centered below for keyboard focus
+      N + '.nc1-close::after{content:attr(data-tip);position:absolute;left:var(--nc1-tx,50%);top:var(--nc1-ty,calc(100% + 6px));z-index:60;' +
+        'transform:translate(calc(-100% - 6px),14px);padding:6px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;' +
         'font-family:inherit;font-size:12px;font-weight:500;line-height:1.2;letter-spacing:.01em;color:#fff;background:#141313;' +
-        'opacity:0;visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s;}' +
+        'opacity:0;visibility:hidden;transition:opacity .15s ease,visibility 0s linear .15s;}' +
+      N + '.nc1-close:focus-visible:not(:hover)::after{transform:translate(-50%,0);}' +
       N + '.nc1-close:hover::after,' + N + '.nc1-close:focus-visible::after{opacity:1;visibility:visible;' +
-        'transform:translate(-50%,0);transition:opacity .15s ease .25s,transform .15s ease .25s,visibility 0s linear .25s;}' +
+        'transition:opacity .15s ease .2s,visibility 0s linear .2s;}' +
     '}',
     // Mobile: the hamburger turns into a clear X (slightly longer lines).
     '@media screen and (max-width:991px){' +
@@ -562,9 +564,18 @@
       closeBtn.setAttribute('aria-controls', panel.id);
       closeBtn.tabIndex = -1;
       closeBtn.setAttribute('data-tip', 'Close nav');
-      closeBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-        '<circle class="nc1-close-disc" cx="12" cy="12" r="12"/>' +
-        '<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
+      closeBtn.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">' +
+        '<path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>';
+      // Tooltip follows the pointer while it's over the button.
+      closeBtn.addEventListener('pointermove', function (e) {
+        var r = closeBtn.getBoundingClientRect();
+        closeBtn.style.setProperty('--nc1-tx', (e.clientX - r.left) + 'px');
+        closeBtn.style.setProperty('--nc1-ty', (e.clientY - r.top) + 'px');
+      });
+      closeBtn.addEventListener('pointerleave', function () {
+        closeBtn.style.removeProperty('--nc1-tx');
+        closeBtn.style.removeProperty('--nc1-ty');
+      });
       actions.appendChild(closeBtn);
     }
 
