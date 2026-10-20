@@ -23,13 +23,12 @@
  *   - Current section: while the menu is closed, the top link whose category
  *     holds the current page (its page, column heading, a link, or a page
  *     nested under one, like /blog/post) keeps its active/hover underline.
+ *   - Round 2 feedback: round Close (X) button after Book Now while the menu
+ *     is open (desktop); hamburger turns into an X (mobile); lighter type
+ *     (400 links / 500 titles); link arrows only on hover; hover sound removed.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
- *   - Hover sound: a soft "paper tick" when hovering a nav item (CLICK_VOLUME).
- *     Browsers only allow sound after the visitor has clicked/tapped/typed on
- *     the page once, so the very first hovers before any click are silent.
- *     Mute with data-nc1-sound="off" on .nc1-nav.
  *
  * Its styles are injected by this file and scoped to .nc1-nav.nc1-v2, on top
  * of the Webflow nc1-* classes.
@@ -164,6 +163,37 @@
       N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
       N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
     '}',
+    // ---- Round 2 feedback ----------------------------------------------------
+    // Lighter type: top links 400 (500 when active), column titles 500, links 400.
+    N + '.nc1-tab-text{font-weight:400;}' +
+    N + '.nc1-tab-text.nc1-active{font-weight:500;}' +
+    N + '.nc1-col-label{font-weight:500;}' +
+    N + '.nc1-link-text{font-weight:400;}',
+    // Menu link arrows show only on hover, so they read as "go to page",
+    // not "opens more links". The hover arrow slides in from the left as before.
+    N + '.nc1-col .nc1-link-arrow{opacity:0;}',
+    // Close button (desktop): a round, light grey inset button that slides in
+    // after Book Now while the menu is open.
+    N + '.nc1-close{display:none;}' +
+    '@media screen and (min-width:992px){' +
+      N + '.nc1-close{display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
+        'width:0;height:44px;margin-left:-12px;padding:0;border:0;border-radius:999px;overflow:hidden;cursor:pointer;' +
+        'color:var(--text,#141313);background:#efedea;opacity:0;pointer-events:none;' +
+        'box-shadow:inset 0 1px 2px rgba(20,19,19,.16),inset 0 0 0 1px rgba(20,19,19,.07);' +
+        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,background-color .2s ease,box-shadow .2s ease;}' +
+      N + '.nc1-close svg{width:13px;height:13px;flex:none;display:block;}' +
+      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:44px;margin-left:0;opacity:1;pointer-events:auto;}' +
+      N + '.nc1-close:hover{background:#e7e4e0;box-shadow:inset 0 2px 4px rgba(20,19,19,.2),inset 0 0 0 1px rgba(20,19,19,.09);}' +
+      N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:2px;}' +
+    '}',
+    // Mobile: the hamburger turns into a clear X (slightly longer lines).
+    '@media screen and (max-width:991px){' +
+      N + '.nc1-burger{width:44px;}' +
+      N + '.nc1-bl-top,' + N + '.nc1-bl-mid,' + N + '.nc1-bl-bot{width:24px;transition:transform .3s EASE,opacity .2s ease;}' +
+      N + '.nc1-bl-top.nc1-open{transform:translateY(7px) rotate(45deg);}' +
+      N + '.nc1-bl-mid.nc1-open{opacity:0;}' +
+      N + '.nc1-bl-bot.nc1-open{transform:translateY(-7px) rotate(-45deg);}' +
+    '}',
     '@media (prefers-reduced-motion:reduce){' +  N + '.nc1-ring{display:none;}' + N + '.nc1-col::before{transition:none!important;}}'
   ].join('\n').replace(/EASE/g, 'cubic-bezier(.37,0,.63,1)');
 
@@ -173,49 +203,6 @@
     style.id = 'nc1-v2-styles';
     style.textContent = css;
     document.head.appendChild(style);
-  }
-
-  // ---- hover click sound ---------------------------------------------------
-  // A soft "paper tick" (6ms filtered-noise click, embedded so there's no
-  // extra file to host). Decoded once, then played through Web Audio for instant response.
-  var CLICK_WAV = 'data:audio/wav;base64,UklGRjQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YRACAACTUpGxRfG75d7osvXNukTs2utvfWk+ygtI+b7msdbf6RwOQgXOI4UK0gW7LG8b3vXk8PQC7yuWAGDwCQnc5dLonQaTCk4AUQiSwrH8O+yh2nn9IxNCBM/yPwFeBSIfUhpCDBIU2f/s7M3+tQX7+5DwP/yh26b+oAn88Cr/6vdiC9fvn/TSCjgXIvR2+osGjAAbFSP+EQVj+WAN8gUn/23wCgvFC6MKIgysBCv5QvTE87AFjPZH+OP7qwEoBqj6svPx/QsKmQouBn0A6wET/zcEiPws//H+ewLbAWEN0gp5CED1Q/fJ9zX+KPQOAWcFTPye+l77pP+0A0wKBAN4A/YApQUhA+0DZPuZ+yX6ugG7AYX+Af2Q/x393Pvb/+EGYQFG/q37x/rA/34CNQFXAbkAcwCN/NX90v+3/hj/qf6m/2oCwwCHAC4CPwLiA2P9SgAa/8b/MwH+AfoBXADiAWz/vf71/4f+3gFfAYcCyv9L/pj+j/9h/kD/Nf8iAS//ZQD+/jz+af4v/qf/HwG4AOoAzwGxABwAdv8h/tX/bv4HABwABQFVAHf/EACg/8X/AgD7//D/gv/S/7v+tP97/9oAXgGN/xgAJQCn/1kADgBF/9L/HABXAMH/bQCwAN7/yf8HAOv/2gB6AMr/pP/p/+sARQAaACkA+f+zAPH/EwDu/wUAfv9AAPH/4P+U/5P//f8=';
-  var CLICK_VOLUME = 0.30; // 0-1; keep it subtle
-  var ctx = null;
-  var clickBuf = null;
-  var lastClick = 0;
-
-  function loadClick() {
-    if (clickBuf || !ctx || loadClick.busy) return;
-    loadClick.busy = true;
-    var raw = atob(CLICK_WAV.split(',')[1]);
-    var bytes = new Uint8Array(raw.length);
-    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-    var done = function (buf) { clickBuf = buf; };
-    var p = ctx.decodeAudioData(bytes.buffer, done, function () {});
-    if (p && p.then) p.then(done, function () {});
-  }
-
-  function unlockAudio() {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    if (!ctx) ctx = new AC();
-    if (ctx.state === 'suspended') ctx.resume();
-    loadClick();
-  }
-
-  function playClick() {
-    if (!ctx || ctx.state !== 'running' || !clickBuf) return;
-    var now = performance.now();
-    if (now - lastClick < 60) return; // don't machine-gun when sweeping the list
-    lastClick = now;
-    var src = ctx.createBufferSource();
-    var gain = ctx.createGain();
-    src.buffer = clickBuf;
-    src.playbackRate.value = 0.97 + Math.random() * 0.06; // tiny variation so repeats feel natural
-    gain.gain.value = CLICK_VOLUME;
-    src.connect(gain);
-    gain.connect(ctx.destination);
-    src.start();
   }
 
   // ---- image swap (ripple) + backdrop + black-panel sync -------------------
@@ -493,16 +480,7 @@
     nav.classList.add('nc1-v2');
     addPixelArrows(nav);
     initFx(nav);
-    if (nav.getAttribute('data-nc1-sound') === 'off') return;
-    var fine = window.matchMedia('(hover: hover) and (pointer: fine)');
-    Array.prototype.forEach.call(nav.querySelectorAll('.nc1-panel .nc1-link'), function (link) {
-      link.addEventListener('mouseenter', function () { if (fine.matches) playClick(); });
-    });
   }
-
-  ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
-    window.addEventListener(evt, unlockAudio, { passive: true, capture: true });
-  });
 
   function bootV2() {
     injectStyles();
@@ -559,6 +537,21 @@
     var suppressFocusOpen = false; // focus returned by Escape must not reopen the menu
 
     if (!panel.id) panel.id = 'nc1-panel';
+
+    // Close button (desktop): added after Book Now, shown while the menu is open.
+    var actions = $('.nc1-actions', nav);
+    var closeBtn = null;
+    if (actions && !$('.nc1-close', actions)) {
+      closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'nc1-close';
+      closeBtn.setAttribute('aria-label', 'Close menu');
+      closeBtn.setAttribute('aria-controls', panel.id);
+      closeBtn.tabIndex = -1;
+      closeBtn.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">' +
+        '<path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>';
+      actions.appendChild(closeBtn);
+    }
 
     // ---- a11y wiring -------------------------------------------------------
     tabs.forEach(function (tab) {
@@ -723,6 +716,8 @@
       var wasOpen = isOpen;
       isOpen = true;
       panel.classList.add('nc1-open');
+      nav.classList.add('nc1-menu-open');
+      if (closeBtn) closeBtn.tabIndex = 0;
       if (typeof tabIndex === 'number') setActiveTab(tabIndex);
       if (MQ_MOBILE.matches) openMobileChrome();
       if (!wasOpen) playPanelEntrance(); // switching tabs while open doesn't replay
@@ -732,6 +727,8 @@
       clearTimeout(closeTimer);
       isOpen = false;
       panel.classList.remove('nc1-open');
+      nav.classList.remove('nc1-menu-open');
+      if (closeBtn) closeBtn.tabIndex = -1;
       setActiveTab(-1);
       closeMobileChrome();
     }
@@ -825,6 +822,14 @@
         toggle($('.nc1-chev', col), 'nc1-open', on);
         var head = $('.nc1-col-head', col);
         if (head) head.setAttribute('aria-expanded', on ? 'true' : 'false');
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closePanel();
       });
     }
 
