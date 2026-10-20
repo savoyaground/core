@@ -199,8 +199,8 @@
         '-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;' +
         'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;}' +
       '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close::before{opacity:1;' +
-        'animation:nc1-halo-spin 2s EASE .3s 1 both,nc1-close-ringfade .5s ease 2.3s forwards;}' +
-      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{animation:nc1-close-glow 2.8s ease .3s 1 both;}' +
+        'animation:nc1-halo-spin 4s EASE .3s 1 both,nc1-close-ringfade .5s ease 4.3s forwards;}' +
+      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{animation:nc1-close-glow 4.8s ease .3s 1 both;}' +
       N + '.nc1-close:hover::before,' + N + '.nc1-close:focus-visible::before{visibility:hidden;}' +
       N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{filter:none!important;}' +
       // tooltip: follows the pointer, sitting just below-left of it (--nc1-tx/--nc1-ty set by
