@@ -24,8 +24,8 @@
  *     holds the current page (its page, column heading, a link, or a page
  *     nested under one, like /blog/post) keeps its active/hover underline.
  *   - Round 2 feedback: round Close (X) button after Book Now while the menu
- *     is open (desktop); hamburger turns into an X (mobile); lighter type
- *     (400 links / 500 titles); link arrows only on hover; hover sound removed.
+ *     is open (desktop); hamburger turns into an X (mobile); mega menu text
+ *     10% smaller on desktop; link arrows only on hover; hover sound removed.
  *   - Tablet (768-991px): sidebar ad shows as a horizontal card (image left).
  *   - Frosted backdrop behind the open menu (desktop); panel gets a soft shadow.
  *   - Type above 1920px grows at ~1/3 the rate (same size at 1920).
@@ -156,19 +156,20 @@
 
     // ---- Typography above 1920px: same size at 1920, ~1/3 the growth after --
     '@media screen and (min-width:1921px){' +
-      N + '.nc1-link-text{font-size:clamp(15.72px,calc(0.12vw + 13.42px),17px);}' +
-      N + '.nc1-col-label{font-size:clamp(11.94px,calc(0.07vw + 10.6px),13px);}' +
+      N + '.nc1-link-text{font-size:clamp(14.15px,calc(0.108vw + 12.08px),15.3px);}' +
+      N + '.nc1-col-label{font-size:clamp(10.75px,calc(0.063vw + 9.54px),11.7px);}' +
       N + '.nc1-cta-eyebrow{font-size:clamp(10.94px,calc(0.07vw + 9.6px),12px);}' +
       N + '.nc1-cta-title{font-size:clamp(23.6px,calc(0.25vw + 18.8px),27px);}' +
       N + '.nc1-cta-body{font-size:clamp(14.46px,calc(0.1vw + 12.54px),15.5px);}' +
       N + '.nc1-cta{width:clamp(345.6px,calc(8vw + 192px),400px);}' +
     '}',
     // ---- Round 2 feedback ----------------------------------------------------
-    // Lighter type: top links 400 (500 when active), column titles 500, links 400.
-    N + '.nc1-tab-text{font-weight:400;}' +
-    N + '.nc1-tab-text.nc1-active{font-weight:500;}' +
-    N + '.nc1-col-label{font-weight:500;}' +
-    N + '.nc1-link-text{font-weight:400;}',
+    // Mega menu type (desktop): original weights (titles 600, links 500) at 90%
+    // of the Webflow sizes. Top links and tablet/mobile sizes are unchanged.
+    '@media screen and (min-width:992px) and (max-width:1920px){' +
+      N + '.nc1-link-text{font-size:clamp(12.6px,calc(0.315vw + 8.1px),16.2px);}' +
+      N + '.nc1-col-label{font-size:clamp(9.9px,calc(0.18vw + 7.29px),12.6px);}' +
+    '}',
     // Menu link arrows show only on hover, so they read as "go to page",
     // not "opens more links". The hover arrow slides in from the left as before.
     N + '.nc1-col .nc1-link-arrow{opacity:0;}',
