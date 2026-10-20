@@ -173,19 +173,31 @@
     // Menu link arrows show only on hover, so they read as "go to page",
     // not "opens more links". The hover arrow slides in from the left as before.
     N + '.nc1-col .nc1-link-arrow{opacity:0;}',
-    // Close button (desktop): a round, light grey inset button that slides in
-    // after Book Now while the menu is open.
+    // Close button (desktop): a raised, soft (neumorphic) round button that
+    // slides in after Book Now while the menu is open. Hover presses it in and
+    // shows a "Close nav" tooltip underneath.
     N + '.nc1-close{display:none;}' +
     '@media screen and (min-width:992px){' +
-      N + '.nc1-close{display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
-        'width:0;height:44px;margin-left:-12px;padding:0;border:0;border-radius:999px;overflow:hidden;cursor:pointer;' +
-        'color:var(--text,#141313);background:#efedea;opacity:0;pointer-events:none;' +
-        'box-shadow:inset 0 1px 2px rgba(20,19,19,.16),inset 0 0 0 1px rgba(20,19,19,.07);' +
-        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,background-color .2s ease,box-shadow .2s ease;}' +
-      N + '.nc1-close svg{width:13px;height:13px;flex:none;display:block;}' +
-      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:44px;margin-left:0;opacity:1;pointer-events:auto;}' +
-      N + '.nc1-close:hover{background:#e7e4e0;box-shadow:inset 0 2px 4px rgba(20,19,19,.2),inset 0 0 0 1px rgba(20,19,19,.09);}' +
-      N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:2px;}' +
+      N + '.nc1-close{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;' +
+        'width:0;height:40px;margin-left:-12px;padding:0;border:0;border-radius:999px;cursor:pointer;' +
+        'color:#fff;background:#eceae7;opacity:0;pointer-events:none;' +
+        'box-shadow:-4px -4px 8px rgba(255,255,255,.95),4px 4px 10px rgba(20,19,19,.16);' +
+        'transition:width .3s EASE,margin .3s EASE,opacity .2s ease,box-shadow .25s ease;}' +
+      N + '.nc1-close svg{width:24px;height:24px;flex:none;display:block;transition:transform .25s ease;}' +
+      N + '.nc1-close .nc1-close-disc{fill:#8a8580;transition:fill .25s ease;}' +
+      '.nc1-nav.nc1-v2.nc1-menu-open .nc1-close{width:40px;margin-left:0;opacity:1;pointer-events:auto;}' +
+      N + '.nc1-close:hover,' + N + '.nc1-close:focus-visible{' +
+        'box-shadow:inset 3px 3px 7px rgba(20,19,19,.18),inset -3px -3px 7px rgba(255,255,255,.95);}' +
+      N + '.nc1-close:hover svg,' + N + '.nc1-close:focus-visible svg{transform:scale(.92);}' +
+      N + '.nc1-close:hover .nc1-close-disc{fill:#6b6560;}' +
+      N + '.nc1-close:focus-visible{outline:2px solid var(--gradient-start,#c56129);outline-offset:3px;}' +
+      // tooltip
+      N + '.nc1-close::after{content:attr(data-tip);position:absolute;top:calc(100% + 10px);left:50%;z-index:60;' +
+        'transform:translate(-50%,-4px);padding:6px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;' +
+        'font-family:inherit;font-size:12px;font-weight:500;line-height:1.2;letter-spacing:.01em;color:#fff;background:#141313;' +
+        'opacity:0;visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s;}' +
+      N + '.nc1-close:hover::after,' + N + '.nc1-close:focus-visible::after{opacity:1;visibility:visible;' +
+        'transform:translate(-50%,0);transition:opacity .15s ease .25s,transform .15s ease .25s,visibility 0s linear .25s;}' +
     '}',
     // Mobile: the hamburger turns into a clear X (slightly longer lines).
     '@media screen and (max-width:991px){' +
@@ -549,8 +561,10 @@
       closeBtn.setAttribute('aria-label', 'Close menu');
       closeBtn.setAttribute('aria-controls', panel.id);
       closeBtn.tabIndex = -1;
-      closeBtn.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">' +
-        '<path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>';
+      closeBtn.setAttribute('data-tip', 'Close nav');
+      closeBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+        '<circle class="nc1-close-disc" cx="12" cy="12" r="12"/>' +
+        '<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
       actions.appendChild(closeBtn);
     }
 
