@@ -779,8 +779,8 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       var pins = marks.filter(function (m) { return m.ap && m.p; });
       var visiblePins = pins.filter(function (m) { return !m.el.classList.contains("is-hid"); }).length;
       var zoomedIn = pins.length > 0 && visiblePins >= Math.min(2, pins.length);
-      // the printed name shows at country scale only: gone once airports show, or when zoomed back out
-      if (cityName) { var baseK = boxTransform(cityFrame(c)).k; cityName.classList.toggle("is-off", zoomedIn || cur.k < baseK * 0.6 || cur.k > baseK * 4); }
+      // the printed name stays as you zoom in, all the way; it fades only when zoomed back out past country scale
+      if (cityName) cityName.classList.toggle("is-off", cur.k < boxTransform(cityFrame(c)).k * 0.6);
       dock.classList.toggle("is-close", zoomedIn);
       // pills sit in the card; when the card is out of view (details open or card closed) they show under the dot instead
       if (apRow) {
