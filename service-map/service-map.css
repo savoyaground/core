@@ -542,6 +542,36 @@
   .svm .sheet, .svm .app.sheet-open .sheet, .svm .ctl { transition: none; }
 }
 
+/* ---------- Request a city: form card over the faded map ---------- */
+.svm .req { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px;
+  background: rgba(5, 5, 6, 0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity 360ms var(--ease); }
+.svm .app.req-open .req { opacity: 1; }
+.svm .app > .svm-left, .svm .app > .topright, .svm .app > .ctl, .svm .app > .legend, .svm .app > .sheet, .svm .app > .dock, .svm .app > .markers { transition: opacity 360ms var(--ease); }
+.svm .app.req-open > .svm-left, .svm .app.req-open > .topright, .svm .app.req-open > .ctl, .svm .app.req-open > .legend, .svm .app.req-open > .sheet, .svm .app.req-open > .dock, .svm .app.req-open > .markers { opacity: 0; pointer-events: none; }
+.svm .req-card { position: relative; width: min(540px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  padding: 32px 32px 24px; border-radius: 12px; background: #FFFFFF; color: #141313;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  transform: translateY(16px) scale(0.98); transition: transform 420ms cubic-bezier(.2, .8, .2, 1); }
+.svm .app.req-open .req-card { transform: none; }
+.svm .req-over { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #C56129; }
+.svm .req-card h2 { margin: 0 40px 8px 0; font-size: 26px; line-height: 1.2; font-weight: 600; color: #141313; }
+.svm .req-sub { margin: 0 0 20px; font-size: 14px; line-height: 1.55; color: #5D5A57; }
+.svm .req-form { min-height: 420px; }
+.svm .req-form iframe { display: block; width: 100%; border: 0; }
+.svm .req-err { font-size: 14px; color: #5D5A57; } .svm .req-err a { color: #C56129; }
+.svm .req-x { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; display: grid; place-items: center; padding: 0;
+  border-radius: 50%; border: 1px solid rgba(20, 19, 19, 0.15); background: #FFFFFF; color: #141313; cursor: pointer;
+  transition: border-color 160ms var(--ease); }
+.svm .req-x:hover { border-color: rgba(197, 97, 41, 0.6); }
+.svm .req-x svg { width: 14px; height: 14px; }
+@media (max-width: 860px) {
+  .svm .req { padding: 12px; align-items: end; }
+  .svm .req-card { width: 100%; max-height: calc(100% - 12px); padding: 24px 20px 16px; }
+  .svm .req-card h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .svm .req, .svm .req-card { transition: none; } }
+
 /* ---------- Webflow mount ---------- */
 .svm { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
   background: #0B0B0C; overflow: hidden; isolation: isolate; }

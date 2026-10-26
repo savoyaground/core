@@ -80,10 +80,6 @@ rep('document.querySelector(".topbar")', 'document.querySelector(".svm .topbar")
 // internal links open in the same tab
 js = js.split("\n").map((l) => (l.includes("SITE +") ? l.split(' target="_blank" rel="noopener"').join("") : l)).join("\n");
 
-// "Request a city" goes to the Service Area Request form on the same page when it is there
-js = js.split("'<a href=\"' + SITE + '/service-areas\">Request a city</a>'").join("'<a href=\"' + REQ + '\">Request a city</a>'");
-rep("'<a class=\"nm-cta\" href=\"' + SITE + '/service-areas\">", "'<a class=\"nm-cta\" href=\"' + REQ + '\">");
-rep('var MAPNAME =', 'var REQ = document.getElementById("request") ? "#request" : SITE + "/service-areas";\n  var MAPNAME =');
 // wheel zooms the map only with Ctrl/Cmd while the page itself scrolls; trackpad pinch sends ctrlKey
 rep(`  var zoom = d3.zoom()
     .scaleExtent([40, 400000])`,
@@ -219,11 +215,6 @@ const loader = `/* Savoya service map: interactive map of every service area.
           load50: function (cb) { json(SHAPES.w50).then(cb).catch(function () { /* stay on 110m outlines */ }); }
         }, CONT, thumbs);
         requestAnimationFrame(function () { mount.classList.add("is-ready"); });
-        mount.addEventListener("click", function (e) {
-          var a = e.target.closest && e.target.closest('a[href="#request"]'), t = document.getElementById("request");
-          if (!a || !t) return;
-          e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
       })
       .catch(function (e) {
         console.error("[service-map]", e);

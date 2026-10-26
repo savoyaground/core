@@ -931,7 +931,7 @@
   var toastEl = document.getElementById("toast"), toastTimer;
   function toast(country) {
     toastEl.innerHTML = "<span>Savoya doesn't list a service area in " + esc(country) + " yet.</span>" +
-      '<a href="' + SITE + '/service-areas" target="_blank" rel="noopener">Request a city</a>' +
+      '<a href="' + SITE + '/service-areas" data-req="" target="_blank" rel="noopener">Request a city</a>' +
       '<button type="button" aria-label="Dismiss">✕</button>';
     toastEl.hidden = false;
     toastEl.querySelector("button").onclick = function () { toastEl.hidden = true; };
@@ -1106,7 +1106,7 @@
         '<p class="nm-title">We don\u2019t list \u201C' + esc(raw) + '\u201D yet</p>' +
         '<p class="nm-body">Savoya often covers nearby towns and private FBOs that aren\u2019t listed here. Tell us where you\u2019re headed and the team will confirm coverage.</p>' +
         (near.length ? '<p class="nm-near-l">Nearby service areas</p><div class="nm-near"></div>' : '') +
-        '<a class="nm-cta" href="' + SITE + '/service-areas" target="_blank" rel="noopener">Request this city<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5"/></svg></a>';
+        '<a class="nm-cta" href="' + SITE + '/service-areas" data-req="' + esc(raw) + '" target="_blank" rel="noopener">Request this city<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5"/></svg></a>';
       if (near.length) {
         var box = li.querySelector(".nm-near");
         // areas whose surrounding towns start with the typed place come first; show 6, the rest on demand
@@ -1179,7 +1179,55 @@
   document.getElementById("zout").addEventListener("click", function () { zoomBy(1 / 1.8); });
   document.getElementById("zworld").addEventListener("click", goWorld);
   document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && reqOpen) { e.preventDefault(); closeRequest(); return; }
     if (e.key === "Escape" && document.activeElement !== q) up();
+  });
+
+  /* ================= Request a city: HubSpot form over the faded map ================= */
+  // Same form as the old Service Area Request section (portal 6205552), so leads route as before.
+  var HS = { region: "na1", portalId: "6205552", formId: "08508ff5-ccef-49a0-be79-2905169a696b", src: "https://js.hsforms.net/forms/embed/v2.js" };
+  var req = document.getElementById("req"), reqForm = document.getElementById("reqForm"), reqOpen = false, reqMade = false, reqText = "", reqT = 0, reqBack = null;
+  function hsScript(done) {
+    if (window.hbspt && window.hbspt.forms) return done();
+    var s = document.querySelector('script[src="' + HS.src + '"]');
+    if (!s) { s = document.createElement("script"); s.src = HS.src; s.async = true; document.head.appendChild(s); }
+    s.addEventListener("load", function () { done(); });
+    s.addEventListener("error", function () { reqForm.innerHTML = '<p class="req-err">The form could not load. <a href="' + SITE + '/contact">Contact the team</a> and they will confirm coverage.</p>'; });
+  }
+  function reqFill() { // put the searched place in "Service Area Needed"
+    if (!reqText) return;
+    var fr = reqForm.querySelector("iframe"), doc = fr ? fr.contentDocument : document, m;
+    try { m = doc && doc.querySelector('[name="message"]'); } catch (e) { m = null; }
+    if (!m || m.value) return;
+    m.value = reqText;
+    m.dispatchEvent(new Event("input", { bubbles: true })); m.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function openRequest(text, from) {
+    reqText = (text || "").trim(); reqBack = from || document.activeElement;
+    closeResults(); hideHover();
+    clearTimeout(reqT); req.hidden = false; reqOpen = true;
+    requestAnimationFrame(function () { app.classList.add("req-open"); });
+    if (!reqMade) {
+      reqMade = true;
+      hsScript(function () {
+        window.hbspt.forms.create({ region: HS.region, portalId: HS.portalId, formId: HS.formId, target: "#" + reqForm.id,
+          onFormReady: function () { setTimeout(reqFill, 60); } });
+      });
+    } else reqFill();
+    setTimeout(function () { req.querySelector(".req-x").focus(); }, 60);
+  }
+  function closeRequest() {
+    if (!reqOpen) return;
+    reqOpen = false; app.classList.remove("req-open");
+    reqT = setTimeout(function () { req.hidden = true; }, reduced ? 0 : 360);
+    if (reqBack && reqBack.focus && reqBack.isConnected) reqBack.focus();
+  }
+  req.querySelector(".req-x").addEventListener("click", closeRequest);
+  req.addEventListener("click", function (e) { if (e.target === req) closeRequest(); });
+  app.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[data-req]");
+    if (!a) return;
+    e.preventDefault(); openRequest(a.getAttribute("data-req"), q);
   });
 
   var resizeT;

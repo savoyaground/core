@@ -544,6 +544,37 @@ a { color: inherit; }
   .radar.is-dest.is-pop .r-core, .radar.is-dest.is-pop .r-flash, .callout, .mk-enter, .toast { animation: none; }
   .sheet, .app.sheet-open .sheet, .ctl { transition: none; }
 }
+
+/* ---------- Request a city: form card over the faded map ---------- */
+.req { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px;
+  background: rgba(5, 5, 6, 0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity 360ms var(--ease); }
+.app.req-open .req { opacity: 1; }
+.app > .left, .app > .topright, .app > .ctl, .app > .legend, .app > .sheet, .app > .dock, .app > .markers { transition: opacity 360ms var(--ease); }
+.app.req-open > .left, .app.req-open > .topright, .app.req-open > .ctl, .app.req-open > .legend,
+.app.req-open > .sheet, .app.req-open > .dock, .app.req-open > .markers { opacity: 0; pointer-events: none; }
+.req-card { position: relative; width: min(540px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  padding: 32px 32px 24px; border-radius: 12px; background: #FFFFFF; color: #141313;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  transform: translateY(16px) scale(0.98); transition: transform 420ms cubic-bezier(.2, .8, .2, 1); }
+.app.req-open .req-card { transform: none; }
+.req-over { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #C56129; }
+.req-card h2 { margin: 0 40px 8px 0; font-size: 26px; line-height: 1.2; font-weight: 600; color: #141313; }
+.req-sub { margin: 0 0 20px; font-size: 14px; line-height: 1.55; color: #5D5A57; }
+.req-form { min-height: 420px; }
+.req-form iframe { display: block; width: 100%; border: 0; }
+.req-err { font-size: 14px; color: #5D5A57; } .req-err a { color: #C56129; }
+.req-x { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; display: grid; place-items: center; padding: 0;
+  border-radius: 50%; border: 1px solid rgba(20, 19, 19, 0.15); background: #FFFFFF; color: #141313; cursor: pointer;
+  transition: border-color 160ms var(--ease); }
+.req-x:hover { border-color: rgba(197, 97, 41, 0.6); }
+.req-x svg { width: 14px; height: 14px; }
+@media (max-width: 860px) {
+  .req { padding: 12px; align-items: end; }
+  .req-card { width: 100%; max-height: calc(100% - 12px); padding: 24px 20px 16px; }
+  .req-card h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .req, .req-card { transition: none; } }
 </style>
 
 <div class="app" id="app">
@@ -611,6 +642,15 @@ a { color: inherit; }
   <div class="toast" id="toast" role="status" hidden></div>
 
   <section class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="shTitle" tabindex="-1"></section>
+  <div class="req" id="req" role="dialog" aria-modal="true" aria-labelledby="reqTitle" hidden>
+    <div class="req-card">
+      <button class="req-x" type="button" aria-label="Close the request form"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2 2 12"/></svg></button>
+      <p class="req-over">Service area request</p>
+      <h2 id="reqTitle">Request a city</h2>
+      <p class="req-sub">Don't see the city you're traveling to? Get in touch with us and we will try our best to make it work.</p>
+      <div class="req-form" id="reqForm"></div>
+    </div>
+  </div>
   <p class="sr" id="live" aria-live="polite"></p>
 </div>
 
