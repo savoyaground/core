@@ -80,19 +80,20 @@ rep('document.querySelector(".topbar")', 'document.querySelector(".svm .topbar")
 // internal links open in the same tab
 js = js.split("\n").map((l) => (l.includes("SITE +") ? l.split(' target="_blank" rel="noopener"').join("") : l)).join("\n");
 
-// wheel zooms the map only with Ctrl/Cmd while the page itself scrolls; trackpad pinch sends ctrlKey
+// wheel zooms the map. Hand-off at the edge: zoomed all the way out to the globe, scrolling down moves the page
+// (to the footer); while the page is scrolled away from the map, the wheel scrolls the page back first.
 rep(`  var zoom = d3.zoom()
     .scaleExtent([40, 400000])`,
-`  var wheelHintT = 0;
-  function pageScrolls() { return document.documentElement.scrollHeight > window.innerHeight + 4; }
+`  function mapInView() { var r = app.getBoundingClientRect(); return r.top >= -2 && r.bottom <= window.innerHeight + 2; }
+  function atGlobe() { return cur.k <= boxTransform(WORLD_BOX).k * 1.02; }
   var zoom = d3.zoom()
     .scaleExtent([40, 400000])
     .filter(function (e) {
       if (e.type === "wheel") {
-        if (e.ctrlKey || e.metaKey || !pageScrolls()) return true;
-        app.classList.add("wheel-hint"); clearTimeout(wheelHintT);
-        wheelHintT = setTimeout(function () { app.classList.remove("wheel-hint"); }, 1400);
-        return false;
+        if (e.ctrlKey) return true;                        // trackpad pinch: always the map
+        if (!mapInView()) return false;                    // page is scrolled: let it scroll back
+        if (e.deltaY > 0 && atGlobe()) return false;       // fully zoomed out: hand off to the page
+        return true;
       }
       return !e.ctrlKey && !e.button;
     })`);
@@ -121,14 +122,8 @@ css += `
 .svm-loading p { margin: 64px 0 0; position: absolute; font-size: 13px; color: #8E8B85; }
 :root:not(.is-ready) .app > :not(canvas) { visibility: hidden; }
 :root.is-ready .svm-loading { opacity: 0; }
-.wheel-hint-tag { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 40; pointer-events: none;
-  padding: 12px 18px; border-radius: 10px; background: rgba(11, 11, 12, 0.82); color: #fff; font-size: 14px; font-weight: 500;
-  opacity: 0; transition: opacity 240ms var(--ease); }
-.app.wheel-hint .wheel-hint-tag { opacity: 1; }
 @media (max-width: 860px) { :root { height: calc(100svh - var(--svm-top, 0px) - 56px); min-height: 520px; } }
 `;
-markup = markup.replace('<p class="sr" id="svm-live"', '<div class="wheel-hint-tag" aria-hidden="true">Hold Ctrl or ⌘ and scroll to zoom the map</div><p class="sr" id="svm-live"');
-if (!markup.includes("wheel-hint-tag")) throw new Error("hint not inserted");
 markup = '<div class="svm-loading" aria-hidden="true"><i></i><p>Loading map</p></div>' + markup;
 
 /* ---------- Scope every selector under .svm, rename keyframes ---------- */
