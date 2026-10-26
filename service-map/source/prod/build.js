@@ -78,7 +78,7 @@ rep('class="btn btn-primary"', 'class="svm-btn svm-btn-primary"');
 rep('class="btn btn-ghost"', 'class="svm-btn svm-btn-ghost"');
 rep('document.querySelector(".topbar")', 'document.querySelector(".svm .topbar")');
 // internal links open in the same tab
-js = js.split("\n").map((l) => (l.includes("SITE +") ? l.split(' target="_blank" rel="noopener"').join("") : l)).join("\n");
+js = js.split("\n").map((l) => (l.includes("SITE +") && !l.includes("Learn more") ? l.split(' target="_blank" rel="noopener"').join("") : l)).join("\n"); // Book Now and Learn more keep a new tab
 
 // wheel zooms the map. Hand-off at the edge: zoomed all the way out to the globe, scrolling down moves the page
 // (to the footer); while the page is scrolled away from the map, the wheel scrolls the page back first.

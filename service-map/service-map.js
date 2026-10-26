@@ -585,9 +585,21 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     var src = THUMBS[c.slug];
     return src ? '<img class="' + cls + '" src="' + src + '" width="' + size + '" height="' + size + '" alt="" decoding="async">' : '';
   }
+  // Surrounding-cities line: city icon + the words fading in letter by letter, left to right
+  var CITY_ICON = '<svg class="c-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M1.5 14.5h13M3 14.5V7.5l4-2v9M7 14.5V2.5l5.5 2.2v9.8M9.2 6.6h1.6M9.2 8.8h1.6M9.2 11h1.6M4.6 9.2h.8M4.6 11.4h.8"/></svg>';
+  function metaHtml(html, cls, animate) {
+    var t = document.createElement("div"); t.innerHTML = html;
+    var txt = t.textContent, body;
+    if (animate && !reduced) {
+      body = '<span class="c-chars" aria-label="' + esc(txt) + '">' + Array.prototype.map.call(txt, function (ch, i) {
+        return '<span aria-hidden="true" style="--i:' + i + '">' + (ch === " " ? "&nbsp;" : esc(ch)) + "</span>";
+      }).join("") + "</span>";
+    } else body = "<span>" + esc(txt) + "</span>";
+    return '<div class="c-meta' + (cls ? " " + cls : "") + '">' + CITY_ICON + body + "</div>";
+  }
   function cardHtml(name, meta, cta, metaClose, c) {
-    return '<button class="c-x" type="button" aria-label="Close"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l8 8M11 3 3 11"/></svg></button><div class="c-head">' + (c ? thumbImg(c, 48, "c-thumb") : '') + '<div class="c-name">' + esc(name) + '</div></div><div class="c-meta">' + meta + '</div>' +
-      (metaClose ? '<div class="c-meta c-meta-close">' + metaClose + '</div>' : '') + '<button class="c-go" type="button">' + cta +
+    return '<button class="c-x" type="button" aria-label="Close"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l8 8M11 3 3 11"/></svg></button><div class="c-head">' + (c ? thumbImg(c, 48, "c-thumb") : '') + '<div class="c-name">' + esc(name) + '</div></div>' + metaHtml(meta, "", true) +
+      (metaClose ? metaHtml(metaClose, "c-meta-close", false) : '') + '<button class="c-go" type="button">' + cta +
       '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5"/></svg></button>' +
       '<button class="copy" type="button" aria-label="Copy a link to this city">' + LINK_ICON + "<span>Copy link</span></button>";
   }
@@ -1067,7 +1079,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
         '<figure class="svm-quote"><blockquote>“Savoya is the best in the business. I have never had a single issue in the four years that I’ve used their services.”</blockquote><figcaption><b>Carly Veazey</b>, Executive Assistant, Zillow Group</figcaption></figure></section>' +
       "</div>" +
       '<footer class="sh-foot"><a class="svm-btn svm-btn-primary" href="' + BOOK + '" target="_blank" rel="noopener">Book Now</a>' +
-      '<a class="svm-btn svm-btn-ghost" href="' + SITE + "/service-areas/" + c.slug + '">Learn more<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/></svg></a></footer>';
+      '<a class="svm-btn svm-btn-ghost" href="' + SITE + "/service-areas/" + c.slug + '" target="_blank" rel="noopener">Learn more<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/></svg></a></footer>';
 
     sheet.querySelector(".sh-close").addEventListener("click", function () { closeSheet(); });
     var cb = sheet.querySelector(".sh-link .copy");
