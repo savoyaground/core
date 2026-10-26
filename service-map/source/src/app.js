@@ -888,11 +888,23 @@
     return hit;
   }
   function hideTip() { tip.hidden = true; }
+  // over open ocean a green "Drag" disc replaces the hand cursor (mouse only)
+  var dragCur = document.getElementById("dragCur"), oceanOn = false, dragHeld = false;
+  function setOcean(on) {
+    if (on === oceanOn) return; oceanOn = on;
+    canvas.classList.toggle("is-ocean", on); dragCur.classList.toggle("is-on", on);
+  }
+  function moveCur(x, y) { dragCur.style.transform = "translate(" + x + "px," + y + "px)"; }
+  canvas.addEventListener("pointerdown", function (e) { if (e.pointerType === "mouse") { dragHeld = true; dragCur.classList.add("is-down"); } });
+  window.addEventListener("pointerup", function () { if (dragHeld) { dragHeld = false; dragCur.classList.remove("is-down"); } });
   canvas.addEventListener("pointermove", function (e) {
-    if (e.pointerType !== "mouse" || canvas.classList.contains("is-dragging")) return;
+    if (e.pointerType !== "mouse") return;
     var r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    moveCur(x, y);
+    if (canvas.classList.contains("is-dragging")) return;
     proj.scale(cur.k).translate([cur.x, cur.y]);
     var f = featAt(x, y);
+    setOcean(!f);
     if (f !== hoverFeat) { hoverFeat = f; schedule(); }
     if (state.level === "world") {
       var rg = f && f.reg && regionByName[f.reg] ? f.reg : null;
@@ -912,7 +924,7 @@
     var tx = Math.min(x + 14, W - tip.offsetWidth - 8);
     tip.style.transform = "translate(" + tx + "px," + (y + 16) + "px)";
   });
-  canvas.addEventListener("pointerleave", function () { hoverFeat = null; hoverReg = null; hideTip(); kickFade(); });
+  canvas.addEventListener("pointerleave", function () { hoverFeat = null; hoverReg = null; hideTip(); kickFade(); if (!dragHeld) setOcean(false); });
   sel.on("click", function (e) {
     if (e.defaultPrevented) return;
     var r = canvas.getBoundingClientRect();
