@@ -31,6 +31,7 @@
   --mint-alpha: 0.22;
   --map-served-edge: rgba(197, 97, 41, 0.35);
   --legend-ink: #666666;
+  --city-ink: rgba(20, 19, 19, 0.16); --city-ink-2: rgba(20, 19, 19, 0.28);
   --radar-edge: rgba(150, 110, 20, 0.85);
   --radar-ring: rgba(196, 140, 20, 0.9);
   --cta-a: #C56129;   /* original copper gradient: buttons */
@@ -72,6 +73,7 @@
 }
 /* dark map: the "second darkest" palette */
 .app[data-map="dark"] {
+  --city-ink: rgba(255, 255, 255, 0.16); --city-ink-2: rgba(255, 255, 255, 0.26);
   --ocean: #0B0B0C; --ocean-hi: #121214;
   --land: #232326; --land-served: #2E2A25; --land-scope: #342F28; --land-active: #3A342C; --land-hover: #4A4134;
   --map-served-edge: rgba(194, 161, 92, 0.32);
@@ -599,6 +601,17 @@ a { color: inherit; }
 .drag-cur.is-on.is-down span { transform: scale(0.82); }
 #map.is-ocean { cursor: none; }
 @media (prefers-reduced-motion: reduce) { .drag-cur span { transition: none; } }
+
+/* ---------- Selected city's name, printed faintly on the map ---------- */
+.mk > .city-name { position: absolute; left: 0; top: 0; pointer-events: none; transform: translate(-50%, calc(-100% - 46px));
+  white-space: nowrap; text-align: center; font-size: 22px; font-weight: 600; line-height: 1.1; text-transform: uppercase;
+  color: var(--city-ink); transition: opacity 400ms var(--ease); }
+.city-name .cn-in { display: block; letter-spacing: 0.32em; padding-left: 0.32em; animation: city-name-in 900ms var(--ease) 250ms both; }
+.city-name small { display: block; margin-top: 6px; font-size: 10px; letter-spacing: 0.34em; padding-left: 0.34em; color: var(--city-ink-2); }
+.city-name.is-off { opacity: 0; }
+@keyframes city-name-in { from { opacity: 0; letter-spacing: 0.5em; } to { opacity: 1; letter-spacing: 0.32em; } }
+@media (max-width: 860px) { .mk > .city-name { display: none; } }
+@media (prefers-reduced-motion: reduce) { .city-name .cn-in { animation: none; } .mk > .city-name { transition: none; } }
 </style>
 
 <div class="app" id="app">

@@ -603,7 +603,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5"/></svg></button>' +
       '<button class="copy" type="button" aria-label="Copy a link to this city">' + LINK_ICON + "<span>Copy link</span></button>";
   }
-  var hoverEl = null, apRow = null;
+  var hoverEl = null, apRow = null, cityName = null;
   // Where dots overlap (Baltimore / Washington, Miami / Boca Raton), the one nearest the pointer wins.
   function nearestDot(x, y) {
     var best = null, bd = 18 * 18;
@@ -639,7 +639,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
   hoverCard.addEventListener("mouseover", function () { clearTimeout(hoverT); });
   hoverCard.addEventListener("mouseout", function (e) { if (!hoverCard.contains(e.relatedTarget)) hideHover(true); });
   function buildMarkers(fresh) {
-    hideHover(); apRow = null;
+    hideHover(); apRow = null; cityName = null;
     markersEl.textContent = ""; marks = []; domCities = {}; destEl = null; dock.hidden = true; dock.textContent = "";
     var s = state;
     if (s.level === "world") {
@@ -721,6 +721,13 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
         apRow = makePills(c, s.airport, function (a) { goCity(c, { airport: a, keepSheet: true, openSheet: true }); }, function () { openSheet(); });
         apRow.className = "ap-row";
         addMark(apRow, [c.lon, c.lat], 5);
+        // the selected city's name printed faintly on the map above it (desktop), behind the dots
+        cityName = el("div", "city-name", '<span class="cn-in">' + esc(c.name) + (c.country !== "United States" ? "<small>" + esc(c.country) + "</small>" : "") + "</span>");
+        cityName.setAttribute("aria-hidden", "true");
+        addMark(cityName, [c.lon, c.lat]);
+        (function (n) { requestAnimationFrame(function () {   // long names shrink to fit about 300px
+          var w = n.scrollWidth; if (w > 300) n.style.fontSize = Math.max(14, 22 * 300 / w).toFixed(1) + "px";
+        }); })(cityName);
         var co = el("div", "callout");
         var name = s.airport ? s.airport.code + " · " + s.airport.name : c.label;
         var via = s.via ? esc(s.via) + " is covered from " + esc(c.label) + ". " : "";
@@ -772,6 +779,8 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       var pins = marks.filter(function (m) { return m.ap && m.p; });
       var visiblePins = pins.filter(function (m) { return !m.el.classList.contains("is-hid"); }).length;
       var zoomedIn = pins.length > 0 && visiblePins >= Math.min(2, pins.length);
+      // the printed name shows at country scale only: gone once airports show, or when zoomed back out
+      if (cityName) { var baseK = boxTransform(cityFrame(c)).k; cityName.classList.toggle("is-off", zoomedIn || cur.k < baseK * 0.6 || cur.k > baseK * 4); }
       dock.classList.toggle("is-close", zoomedIn);
       // pills sit in the card; when the card is out of view (details open or card closed) they show under the dot instead
       if (apRow) {
