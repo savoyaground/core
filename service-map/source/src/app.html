@@ -580,11 +580,13 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .req, .req-card { transition: none; } }
 
 /* ---------- Drag cursor over open ocean (desktop) ---------- */
-.drag-cur { position: absolute; z-index: 6; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.drag-cur { position: absolute; z-index: 9; left: 0; top: 0; width: 0; height: 0; pointer-events: none;
+  --dc-rgb: 197, 97, 41; --dc-edge: rgba(221, 144, 88, 0.85); --dc-ink: #DD9058; }      /* Dark map: copper */
+.app[data-map="light"] .drag-cur { --dc-rgb: 194, 161, 92; --dc-edge: rgba(220, 194, 137, 0.85); --dc-ink: #8C6F2E; } /* Light map: gold */
 .drag-cur span { position: absolute; left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 50%;
-  display: grid; place-items: center; background: var(--green); color: #0B0B0C;
+  display: grid; place-items: center; background: rgba(var(--dc-rgb), 0.16); border: 1px solid var(--dc-edge); color: var(--dc-ink);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
   opacity: 0; transform: scale(0.3); transition: opacity 180ms var(--ease), transform 260ms cubic-bezier(.2, .9, .3, 1.2); }
 .drag-cur.is-on span { opacity: 1; transform: scale(1); }
 .drag-cur.is-on.is-down span { transform: scale(0.82); }
