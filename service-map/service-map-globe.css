@@ -441,11 +441,11 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 .svm .tip small { color: var(--muted); margin-left: 6px; }
 /* landmark badge in place of the dot on continent labels */
-.svm .chip .lm { width: 32px; height: 32px; margin: -6px 4px -6px -8px; border-radius: 50%; flex: none; overflow: hidden; position: relative;
-  border: 1.5px solid rgba(221, 144, 88, 0.75); box-shadow: 0 0 0 2px rgba(20, 19, 19, 0.6), 0 0 12px rgba(197, 97, 41, 0.4);
-  transition: transform 260ms var(--ease), box-shadow 260ms var(--ease), border-color 260ms var(--ease); transform-origin: 60% 50%; }
-.svm .chip .lm img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
-.svm .chip.has-lm:hover .lm { transform: scale(1.38); border-color: #F5AD59; box-shadow: 0 0 0 2px rgba(20, 19, 19, 0.6), 0 0 18px rgba(245, 173, 89, 0.6); }
+.svm .chip .lm { width: 28px; height: 28px; margin: -3px 2px -3px -4px; border-radius: 50%; flex: none; display: inline-grid; place-items: center;
+  background: radial-gradient(circle at 30% 25%, #3A2A1E, #151312); border: 1px solid rgba(221, 144, 88, 0.55); color: #F5AD59;
+  box-shadow: 0 0 10px rgba(197, 97, 41, 0.35); transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease); }
+.svm .chip .lm svg { width: 19px; height: 19px; display: block; }
+.svm .chip.has-lm:hover .lm { border-color: #F5AD59; box-shadow: 0 0 14px rgba(245, 173, 89, 0.55); }
 /* service-area reach: one pill under the outline instead of hundreds of dots */
 .svm .area-pill { position: absolute; z-index: 4; left: 0; top: 0; pointer-events: none; display: inline-flex; align-items: center; gap: 7px;
   padding: 6px 12px 6px 10px; border-radius: 999px; white-space: nowrap; font-size: 12px; letter-spacing: 0.01em; color: var(--text);
