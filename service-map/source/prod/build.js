@@ -3,11 +3,12 @@
 const fs = require("fs"), path = require("path");
 const postcss = require("postcss"), prefixer = require("postcss-prefix-selector");
 const ROOT = path.join(__dirname, "..");
-const OUT = path.join(__dirname, "out");
+const SRC = process.env.SVM_SRC || "src";
+const OUT = process.env.SVM_OUT || path.join(__dirname, "out");
 fs.mkdirSync(OUT, { recursive: true });
 
-const html = fs.readFileSync(path.join(ROOT, "src/app.html"), "utf8");
-let js = fs.readFileSync(path.join(ROOT, "src/app.js"), "utf8");
+const html = fs.readFileSync(path.join(ROOT, SRC, "app.html"), "utf8");
+let js = fs.readFileSync(path.join(ROOT, SRC, "app.js"), "utf8");
 let css = html.slice(html.indexOf("<style>") + 7, html.indexOf("</style>"));
 let markup = html.slice(html.indexOf('<div class="app" id="app">'), html.indexOf("<script"));
 
@@ -50,7 +51,8 @@ js = js.replace(/var cities = window\.SVC_ROWS\.map\(function \(r\) \{[\s\S]*?\n
     return {
       name: r.c, region: r.r, country: r.co, state: r.st, slug: r.s, lat: r.la, lon: r.lo, featured: false,
       airports: r.a.map(function (a) { return { code: a.code, name: a.name, lat: a.la != null ? a.la : null, lon: a.lo != null ? a.lo : null, slug: a.sl || null }; }),
-      nearby: r.nb, label: r.n
+      nearby: r.nb, label: r.n,
+      near: (r.nc || []).map(function (t) { return { name: t[0], lat: t[1], lon: t[2] }; })
     };
   });
 `); });
@@ -82,7 +84,7 @@ js = js.split("\n").map((l) => (l.includes("SITE +") && !l.includes("Learn more"
 
 // wheel zooms the map. Hand-off at the edge: zoomed all the way out to the globe, scrolling down moves the page
 // (to the footer); while the page is scrolled away from the map, the wheel scrolls the page back first.
-rep(`  var zoom = d3.zoom()
+if (js.includes("  var zoom = d3.zoom()")) rep(`  var zoom = d3.zoom()
     .scaleExtent([40, 400000])`,
 `  function mapInView() { var r = app.getBoundingClientRect(); return r.top >= -2 && r.bottom <= window.innerHeight + 2; }
   function atGlobe() { return cur.k <= boxTransform(WORLD_BOX).k * 1.02; }
@@ -198,13 +200,15 @@ const loader = `/* Savoya service map: interactive map of every service area.
     mount.innerHTML = MARKUP;
     fit(mount);
     window.addEventListener("resize", function () { fit(mount); });
+    var IN = window.SVM_INLINE || null;   // preview pages carry their data inline
+    if (IN) json = function (u) { return Promise.resolve(u === SHAPES.w110 ? IN.w110 : u === SHAPES.us ? IN.us : u === SHAPES.w50 ? IN.w50 : IN.data); };
     var data = json(base + "service-areas.json");
     var shapes = Promise.all([json(SHAPES.w110), json(SHAPES.us)]);
     lib("d3").then(function () { return lib("topojson"); })
       .then(function () { return Promise.all([data, shapes]); })
       .then(function (r) {
         var thumbs = {};
-        r[0].forEach(function (c) { thumbs[c.s] = base + "thumbs/" + c.s + ".webp"; });
+        r[0].forEach(function (c) { thumbs[c.s] = (IN && IN.thumbs && IN.thumbs[c.s]) || base + "thumbs/" + c.s + ".webp"; });
         window.SavoyaServiceMap(r[0], {
           w110: r[1][0], us: r[1][1],
           load50: function (cb) { json(SHAPES.w50).then(cb).catch(function () { /* stay on 110m outlines */ }); }

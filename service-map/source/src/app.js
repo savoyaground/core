@@ -203,8 +203,7 @@
     var vb = visibleBounds();
     var F = cur.k > 900 ? F50 : F110;
 
-    ctx.beginPath(); path(graticule);
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.stroke();
+    // no lat/long grid on the ocean (stakeholder feedback, Oct 27)
 
     var groups = {};
     var vis = [];
