@@ -156,6 +156,14 @@
   var leftPanel = document.getElementById("leftPanel");
   var canvas = document.getElementById("map");
   var ctx = canvas.getContext("2d");
+  // a light overlay for things that move on their own (cars, the city plane), so the globe underneath
+  // only repaints when the camera moves
+  var fxCanvas = document.createElement("canvas"); fxCanvas.className = "fxl"; fxCanvas.setAttribute("aria-hidden", "true");
+  canvas.parentNode.insertBefore(fxCanvas, canvas.nextSibling);
+  var fxctx = fxCanvas.getContext("2d"), fxDirty = false;
+  // pause all motion while the map is scrolled out of view
+  var onScreen = true;
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; if (onScreen) schedule(); }).observe(canvas);
   var markersEl = document.getElementById("markers");
   var W = 0, H = 0, dpr = 1;
   // 3D globe: orthographic projection. cur = the camera: centre lon/lat, scale k (px per radian = globe radius),
@@ -185,7 +193,11 @@
   app.setAttribute("data-map", "dark"); readTokens();
 
   var K_MAX = 60000, anim = null, spin = null, idleT = 0, lastInteract = 0;
-  function kFit() { var r = viewRect(); return Math.min(r.w, r.h) / 2 * 0.94; }
+  var kFitMemo = { t: 0, v: 0 };
+  function kFit() { // the globe-fits-the-view scale; re-measured at most every 200ms (it reads layout)
+    var now = performance.now(); if (now - kFitMemo.t < 200 && kFitMemo.v) return kFitMemo.v;
+    var r = viewRect(); kFitMemo.t = now; return (kFitMemo.v = Math.min(r.w, r.h) / 2 * 0.94);
+  }
   function stopAnim() { if (anim) { anim.stop(); anim = null; } if (spin) { spin.stop(); spin = null; } }
   var sel = { interrupt: function () { stopAnim(); flyToken++; } };
   function clampLat(v) { return Math.max(-80, Math.min(80, v)); }
@@ -262,13 +274,13 @@
   // a slow idle turn on the globe view, like Google Earth; any touch of the map stops it
   // world view: a steady west-to-east turn (the land slides left to right), easing in after any interaction
   // and slowing to a crawl while a region is hovered so the highlight stays readable
-  var SPIN_DEG_S = 7;   // degrees per second, west to east like the real Earth
+  var SPIN_DEG_S = 10;   // degrees per second, west to east like the real Earth
   function idleSpin() {
     if (reduced) return;
     var last = 0, v = 0;
     d3.timer(function (t) {
       var dt = Math.min(0.05, (t - last) / 1000); last = t;
-      var on = !(anim || spin || Object.keys(ptrs).length || state.level !== "world" || document.hidden || Date.now() - lastInteract < 2500);
+      var on = !(anim || spin || !onScreen || document.hidden || Date.now() - lastInteract < 1800 || Object.keys(ptrs).length || cur.k > kFit() * 1.08);   // turns whenever you are out at globe scale
       var target = on ? (hoverReg ? 0.25 : 1) : 0;
       v += (target - v) * Math.min(1, dt * 1.6);          // ease the speed in and out
       if (!on) { if (v < 0.01) { v = 0; return; } if (anim || spin || Object.keys(ptrs).length) { v = 0; return; } }
@@ -279,12 +291,18 @@
 
   var raf = 0;
   function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
-  function frame() { raf = 0; draw(); place(); }
+  function frame() {
+    raf = 0; draw(); place(); fxDraw();
+    // zoomed back out to a whole globe from a continent: tuck the crowded country labels away
+    var far = state.level === "region" && cur.k < kFit() * 1.3;
+    if (far !== app.classList.contains("is-far")) app.classList.toggle("is-far", far);
+  }
 
   function resize() {
     var r = app.getBoundingClientRect();
     W = r.width; H = r.height; dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    fxCanvas.width = canvas.width; fxCanvas.height = canvas.height; FX.starLayer = null; kFitMemo.t = 0;
     var vr = viewRect(); cur.cx = vr.x + vr.w / 2; cur.cy = vr.y + vr.h / 2;
   }
 
@@ -364,24 +382,29 @@
       if (u >= 1) { FX.introT0 = 0; tm.stop(); }
     });
   }
+  function starLayer() {
+    if (FX.starLayer) return FX.starLayer;
+    var c = document.createElement("canvas"); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    var g = c.getContext("2d"); g.scale(dpr, dpr);
+    FX.stars.forEach(function (s) {
+      g.globalAlpha = s.a * 0.85; g.fillStyle = s.warm ? "#F5D3A6" : "#FFFFFF";
+      g.beginPath(); g.arc(s.u * W, s.v * H, s.r, 0, 6.2832); g.fill();
+    });
+    return (FX.starLayer = c);
+  }
   function drawStars(now, gx, gy, R0) {
     var fade = clamp01(2.2 - cur.k / kFit()) * (0.35 + 0.65 * introU(now)); if (fade <= 0) return;
-    var drift = cur.lon / 360 * 0.35;                      // a touch of parallax as the globe turns
-    FX.stars.forEach(function (s) {
-      var x = (((s.u + drift) % 1) + 1) % 1 * W, y = s.v * H;
-      var dx = x - gx, dy = y - gy; if (dx * dx + dy * dy < R0 * R0 * 1.02) return;
-      var tw = reduced ? 1 : 0.65 + 0.35 * Math.sin(now / 1000 * s.sp + s.ph);
-      ctx.globalAlpha = s.a * tw * fade;
-      ctx.fillStyle = s.warm ? "#F5D3A6" : "#FFFFFF";
-      ctx.beginPath(); ctx.arc(x, y, s.r, 0, 6.2832); ctx.fill();
-    });
+    var L = starLayer(), off = ((cur.lon / 360 * 0.35) % 1 + 1) % 1 * W;   // a touch of parallax as the globe turns
+    ctx.globalAlpha = fade;
+    ctx.drawImage(L, 0, 0, L.width, L.height, off, 0, W, H);
+    ctx.drawImage(L, 0, 0, L.width, L.height, off - W, 0, W, H);
     ctx.globalAlpha = 1;
   }
   function drawNightLights() {
     if (state.level !== "world") return;   // world view only: once you pick a continent the lights go off
     var z = cur.k / kFit(), a = clamp01(1.25 - (z - 1) / 5); if (a <= 0) return;
-    var sz = state.level === "world" ? 22 : 30;
-    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.5 * a;
+    var sz = 18;
+    ctx.save(); ctx.globalAlpha = 0.42 * a;   // plain blending: cheaper than additive, and a touch fainter
     cities.forEach(function (c) {
       var p = P([c.lon, c.lat]); if (!p || p[0] < -30 || p[0] > W + 30 || p[1] < -30 || p[1] > H + 30) return;
       ctx.drawImage(glowSprite, p[0] - sz / 2, p[1] - sz / 2, sz, sz);
@@ -618,20 +641,14 @@
     ctx.restore();
   }
 
-  // country level: one plane hops between two of its cities (or flies in to a single-city island), then lands
-  function drawCountryHop(now) {
-    if (state.level !== "country" || FX.ctry !== state.country || !FX.ctryT0) return;
-    var dur = 4200, u = (now - FX.ctryT0) / dur; if (u <= 0 || u > 1.25) return;
-    if (!FX.hop || FX.hop.for !== FX.ctryT0) {
-      var cs = countries[state.country].cities.filter(inFrame), a, b;
-      if (cs.length >= 2) { // the longest hop that stays in frame
-        var best = 0; cs.forEach(function (p) { cs.forEach(function (q) { var d = d3.geoDistance([p.lon, p.lat], [q.lon, q.lat]); if (d > best) { best = d; a = p; b = q; } }); });
-        if (a.lon > b.lon) { var t = a; a = b; b = t; }                        // west to east
-        a = [a.lon, a.lat]; b = [b.lon, b.lat];
-      } else if (cs.length === 1) { // a single place, like Bermuda: arrive from out over the water
-        b = [cs[0].lon, cs[0].lat]; a = [b[0] - 3.2, b[1] - 1.4];
-      } else return;
-      FX.hop = { for: FX.ctryT0, a: a, b: b, gi: d3.geoInterpolate(a, b) };
+  // city: when someone picks a city, one small plane flies in from the west and lands on it
+  function drawCityHop(now) {
+    var c = state.city; if (!c || FX.hopCity !== c || !FX.hopT0) return;
+    var dur = 3200, u = (now - FX.hopT0) / dur; if (u <= 0 || u > 1.25) return;
+    if (!FX.hop || FX.hop.for !== FX.hopT0) {
+      var b = [c.lon, c.lat], span = Math.max(1.2, Math.min(9, 240 / cur.k * 180 / Math.PI));   // about 240px of approach on screen
+      var a = [b[0] - span, b[1] - span * 0.32];
+      FX.hop = { for: FX.hopT0, a: a, b: b, gi: d3.geoInterpolate(a, b) };
     }
     var H = FX.hop, pa = P(H.a), pb = P(H.b); if (!pa || !pb) return;
     var L = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]), lift = Math.min(90, L * 0.18);
@@ -654,13 +671,26 @@
     }
     ctx.restore();
   }
+  // the overlay pass: clears and redraws only the moving pieces
+  function fxDraw() {
+    var now = performance.now(), c = state.city;
+    var hopOn = c && FX.hopCity === c && now - FX.hopT0 < 4200;
+    var carsOn = c && cur.k > kFit() * 2 && cur.k / boxTransform(areaBox(c)).k > 0.25;
+    var live = hopOn || carsOn;
+    if (!live && !fxDirty) return;
+    var main = ctx; ctx = fxctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    if (live) { syncProj(); drawRoutesAndPulses(now); drawCityHop(now); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx = main;
+    fxDirty = !!live;
+  }
   // keeps frames coming while something is alive on screen (twinkle, pulses, arcs, intro)
   function ambient() {
-    if (reduced) return;
-    d3.timer(function () {
-      if (document.hidden) return;
-      var live = FX.introT0 || (state.level === "world" && cur.k < kFit() * 1.6) || (state.city && cur.k > kFit() * 3);
-      if (live) schedule();
+    var lastFx = 0;
+    d3.timer(function (t) {
+      if (document.hidden || !onScreen) return;
+      if (FX.introT0 && !reduced) schedule();
+      if (t - lastFx > 33) { lastFx = t; fxDraw(); }
     });
   }
 
@@ -807,14 +837,15 @@
     }
     drawNightLights();
     // every served city as a faint point (live markers sit on top where they apply)
-    ctx.fillStyle = C.dot;
+    ctx.fillStyle = C.dot; ctx.beginPath();
+    var dr = state.level === "world" ? 1.6 : 2.1;
     cities.forEach(function (c) {
       if (domCities[c.slug]) return;
       var p = P([c.lon, c.lat]);
       if (!p || p[0] < -10 || p[0] > W + 10 || p[1] < -10 || p[1] > H + 10) return;
-      ctx.beginPath(); ctx.arc(p[0], p[1], state.level === "world" ? 1.6 : 2.1, 0, 6.2832); ctx.fill();
+      ctx.moveTo(p[0] + dr, p[1]); ctx.arc(p[0], p[1], dr, 0, 6.2832);
     });
-    drawRoutesAndPulses(now);
+    ctx.fill();
     drawIntro(now, gx, gy, R0);
     // planes retired (Oct 27, keep it clean and light): drawJets / drawCountryHop are no longer called
   }
@@ -909,12 +940,12 @@
     state = { level: "country", region: countries[name].region, country: name, city: null, airport: null, via: null };
     render(); setHash();
     fly(countryBox(name));
-    FX.ctry = name; FX.ctryT0 = performance.now() + 1300;   // once the camera settles, a plane makes one hop
     say("Showing " + name + ", " + countries[name].cities.length + " service areas");
   }
   function goCity(c, opts) {
     opts = opts || {};
     var same = state.city === c, prevCountry = state.country, prevLevel = state.level;
+    if (!same && !reduced) { FX.hopCity = c; FX.hopT0 = performance.now() + 900; }   // one plane flies in once the camera is on its way
     state = { level: "city", region: c.region, country: c.country, city: c, airport: opts.airport || null, via: opts.via || null };
     if (!opts.keepSheet) closeSheet(true);
     render(!same);
@@ -1586,7 +1617,7 @@
   var sheet = document.getElementById("sheet");
   var STATS = [["61%", "of Fortune 100 companies"], ["99.5%", "of trips executed without issue"], ["300+", "service areas across six continents"], ["7,200+", "chauffeurs on the platform"]];
   var lastFocus = null, lastSheetKey = null;
-  function openSheet(noReframe) {
+  function openSheet(noReframe) { kFitMemo.t = 0;
     var c = state.city; if (!c) return;
     var a = state.airport;
     var place = c.name;
@@ -1666,7 +1697,7 @@
     var on = sheet.querySelector(".ap-list li.is-on");
     if (on) on.scrollIntoView({ block: "center" });
   }
-  function closeSheet(silent) {
+  function closeSheet(silent) { kFitMemo.t = 0;
     if (!app.classList.contains("sheet-open")) return;
     app.classList.remove("sheet-open");
     requestAnimationFrame(function () { place(); });

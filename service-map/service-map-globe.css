@@ -106,6 +106,8 @@
   radial-gradient(120% 90% at 60% 40%, var(--ocean-hi) 0%, var(--ocean) 70%); transition: background-color 300ms var(--ease); }
 .svm #svm-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .svm #svm-map.is-dragging { cursor: grabbing; }
+.svm .app.is-far .markers .chip { opacity: 0; pointer-events: none; }
+.svm .fxl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .svm #svm-map.is-pointer { cursor: pointer; }
 
 /* ---------- Markers ---------- */
@@ -272,8 +274,9 @@
 .svm .svm-left > .popular { flex: 0 1 auto; min-height: 120px; }
 .svm .popular { display: flex; flex-direction: column; min-height: 0; }
 .svm .p-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 20px 10px; }
-.svm .p-head h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--copper-light); }
-.svm .p-head span { font-size: 12px; color: var(--muted); }
+.svm .p-head h2 { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--copper-light); }
+.svm .p-head > span { font-size: 12px; color: var(--muted); }
+.svm .p-head h2 .licon { align-self: center; }   /* icon centred, label and "Featured cities" share one baseline */
 .svm .pop-list { list-style: none; margin: 0; padding: 2px 10px 10px; display: grid; gap: 8px; overflow-y: auto; min-height: 0; }
 .svm .svm-pop { width: 100%; display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; text-align: left; cursor: pointer;
   padding: 6px 10px 6px 6px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--hairline);
@@ -371,6 +374,47 @@
 .svm .browse.is-world .svm-row { padding: 8px 12px; }
 .svm .browse.is-world .svm-row small { display: none; }
 @media (min-width: 861px) and (max-height: 880px) { .svm .topbar h1 { display: none; } .svm .topbar { gap: 12px; } }
+/* World level: the trail is just "World", which the top-left breadcrumb already shows */
+.svm .app.at-world .browse .crumbs { display: none; }
+.svm .app.at-world .b-head { padding-top: 14px; }
+/* laptops and tablets landscape: tighter left column */
+@media (min-width: 861px) and (max-width: 1440px) {
+  .svm { --panel-w: 316px; }
+  .svm .svm-left { top: 16px; bottom: 16px; left: max(16px, env(safe-area-inset-left, 0px)); gap: 8px; }
+  .svm .topbar { padding: 14px 16px 12px; gap: 10px; }
+  .svm .overline { font-size: 10px; }
+  .svm .topbar h1 { font-size: 19px; line-height: 1.22; }
+  .svm #svm-q { height: 40px; font-size: 14px; padding: 0 36px 0 36px; }
+  .svm .search .s-icon { left: 12px; width: 15px; height: 15px; margin-top: -7.5px; }
+  .svm .crumbs { padding: 10px 16px 0; font-size: 11.5px; }
+  .svm .b-head { padding: 6px 16px 10px; }
+  .svm .app.at-world .b-head { padding-top: 12px; }
+  .svm .b-head h2 { font-size: 15px; gap: 8px; }
+  .svm .licon { width: 24px; height: 24px; }
+  .svm .svm-list { padding: 4px; }
+  .svm .svm-row { padding: 8px 10px; gap: 10px; }
+  .svm .browse.is-world .svm-row { padding: 6px 10px; }
+  .svm .svm-row b { font-size: 13px; }
+  .svm .svm-row small, .svm .svm-row .cnt { font-size: 11.5px; }
+  .svm .p-head { padding: 10px 16px 8px; }
+  .svm .p-head h2 { font-size: 10px; gap: 8px; }
+  .svm .p-head > span { font-size: 11.5px; }
+  .svm .pop-list { padding: 2px 8px 8px; gap: 6px; }
+  .svm .svm-pop { grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 5px 8px 5px 5px; }
+  .svm .thumb { width: 64px; }
+  .svm .pt b { font-size: 12.5px; }
+  .svm .pt small { font-size: 11.5px; }
+  .svm .topcrumbs, .svm .legend { left: calc(var(--panel-w) + 32px); }
+  .svm .topcrumbs { top: 16px; min-height: 38px; }
+  .svm .topright { top: 16px; right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+@media (min-width: 861px) and (max-width: 1200px) {
+  .svm { --panel-w: 292px; }
+  .svm .topbar h1 { font-size: 17px; }
+  .svm #svm-q { font-size: 13px; }
+  .svm .svm-pop { grid-template-columns: 54px minmax(0, 1fr); }
+  .svm .thumb { width: 54px; }
+}
 .svm .svm-list .sub { padding: 12px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper-light); }
 .svm .svm-row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
   border: 0; background: none; text-align: left; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; }

@@ -109,6 +109,8 @@ a { color: inherit; }
   radial-gradient(120% 90% at 60% 40%, var(--ocean-hi) 0%, var(--ocean) 70%); transition: background-color 300ms var(--ease); }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 #map.is-dragging { cursor: grabbing; }
+.app.is-far .markers .chip { opacity: 0; pointer-events: none; }
+.fxl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 #map.is-pointer { cursor: pointer; }
 
 /* ---------- Markers ---------- */
@@ -275,8 +277,9 @@ a { color: inherit; }
 .left > .popular { flex: 0 1 auto; min-height: 120px; }
 .popular { display: flex; flex-direction: column; min-height: 0; }
 .p-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 20px 10px; }
-.p-head h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--copper-light); }
-.p-head span { font-size: 12px; color: var(--muted); }
+.p-head h2 { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--copper-light); }
+.p-head > span { font-size: 12px; color: var(--muted); }
+.p-head h2 .licon { align-self: center; }   /* icon centred, label and "Featured cities" share one baseline */
 .pop-list { list-style: none; margin: 0; padding: 2px 10px 10px; display: grid; gap: 8px; overflow-y: auto; min-height: 0; }
 .pop { width: 100%; display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; text-align: left; cursor: pointer;
   padding: 6px 10px 6px 6px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--hairline);
@@ -374,6 +377,47 @@ a { color: inherit; }
 .browse.is-world .row { padding: 8px 12px; }
 .browse.is-world .row small { display: none; }
 @media (min-width: 861px) and (max-height: 880px) { .topbar h1 { display: none; } .topbar { gap: 12px; } }
+/* World level: the trail is just "World", which the top-left breadcrumb already shows */
+.app.at-world .browse .crumbs { display: none; }
+.app.at-world .b-head { padding-top: 14px; }
+/* laptops and tablets landscape: tighter left column */
+@media (min-width: 861px) and (max-width: 1440px) {
+  :root { --panel-w: 316px; }
+  .left { top: 16px; bottom: 16px; left: max(16px, env(safe-area-inset-left, 0px)); gap: 8px; }
+  .topbar { padding: 14px 16px 12px; gap: 10px; }
+  .overline { font-size: 10px; }
+  .topbar h1 { font-size: 19px; line-height: 1.22; }
+  #q { height: 40px; font-size: 14px; padding: 0 36px 0 36px; }
+  .search .s-icon { left: 12px; width: 15px; height: 15px; margin-top: -7.5px; }
+  .crumbs { padding: 10px 16px 0; font-size: 11.5px; }
+  .b-head { padding: 6px 16px 10px; }
+  .app.at-world .b-head { padding-top: 12px; }
+  .b-head h2 { font-size: 15px; gap: 8px; }
+  .licon { width: 24px; height: 24px; }
+  .list { padding: 4px; }
+  .row { padding: 8px 10px; gap: 10px; }
+  .browse.is-world .row { padding: 6px 10px; }
+  .row b { font-size: 13px; }
+  .row small, .row .cnt { font-size: 11.5px; }
+  .p-head { padding: 10px 16px 8px; }
+  .p-head h2 { font-size: 10px; gap: 8px; }
+  .p-head > span { font-size: 11.5px; }
+  .pop-list { padding: 2px 8px 8px; gap: 6px; }
+  .pop { grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 5px 8px 5px 5px; }
+  .thumb { width: 64px; }
+  .pt b { font-size: 12.5px; }
+  .pt small { font-size: 11.5px; }
+  .topcrumbs, .legend { left: calc(var(--panel-w) + 32px); }
+  .topcrumbs { top: 16px; min-height: 38px; }
+  .topright { top: 16px; right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+@media (min-width: 861px) and (max-width: 1200px) {
+  :root { --panel-w: 292px; }
+  .topbar h1 { font-size: 17px; }
+  #q { font-size: 13px; }
+  .pop { grid-template-columns: 54px minmax(0, 1fr); }
+  .thumb { width: 54px; }
+}
 .list .sub { padding: 12px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper-light); }
 .row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
   border: 0; background: none; text-align: left; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; }
