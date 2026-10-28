@@ -513,7 +513,7 @@ a { color: inherit; }
 .sheet { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: var(--sheet-w); max-width: 100%;
   display: flex; flex-direction: column; background: rgba(20, 19, 19, 0.7); border-left: 1px solid var(--hairline-strong);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-edge), -24px 0 60px rgba(0, 0, 0, 0.45);
+  box-shadow: none;   /* no drop shadow on the details pane (Oct 28) */
   transform: translateX(100%); visibility: hidden;
   transition: transform 520ms var(--ease), visibility 0s linear 520ms; }
 .app.sheet-open .sheet { transform: none; visibility: visible; transition: transform 520ms var(--ease), visibility 0s; }
@@ -727,6 +727,16 @@ a { color: inherit; }
 .p-head h2 .licon { display: inline-block !important; align-self: center; }
 .b-head h2 { align-items: center; }
 @media (min-width: 861px) and (max-width: 1440px) { .p-head { padding: 12px 16px 10px; } .p-head h2 { font-size: 15px !important; gap: 8px; } }
+
+/* popular airport cards: brand gradient border on hover (copper to gold, 135deg) */
+.pop { position: relative; }
+.pop::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, #C56129, #F5AD59);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity 200ms var(--ease); }
+.pop:hover, .pop:focus-visible { border-color: transparent; background: rgba(245, 173, 89, 0.06); }
+.pop:hover::before, .pop:focus-visible::before { opacity: 1; }
+.row.is-primary .cnt svg { opacity: 1 !important; color: #FFFFFF; stroke-width: 2; }   /* solid white chevron on the CTA row */
 </style>
 
 <div class="app" id="app">

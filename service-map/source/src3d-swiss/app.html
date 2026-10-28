@@ -513,7 +513,7 @@ a { color: inherit; }
 .sheet { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: var(--sheet-w); max-width: 100%;
   display: flex; flex-direction: column; background: rgba(20, 19, 19, 0.7); border-left: 1px solid var(--hairline-strong);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-edge), -24px 0 60px rgba(0, 0, 0, 0.45);
+  box-shadow: none;   /* no drop shadow on the details pane (Oct 28) */
   transform: translateX(100%); visibility: hidden;
   transition: transform 520ms var(--ease), visibility 0s linear 520ms; }
 .app.sheet-open .sheet { transform: none; visibility: visible; transition: transform 520ms var(--ease), visibility 0s; }
@@ -804,19 +804,29 @@ a { color: inherit; }
 .markers .city-name .cn-in small { font-size: 8px !important; }
 .chip .lm svg { width: 17px; height: 17px; }
 
-/* breadcrumbs: larger, high-contrast sans for legibility (pixel type stays on the small labels) */
-.topcrumbs, .topcrumbs button { font-family: var(--font) !important; text-transform: none !important; letter-spacing: 0 !important; }
-.topcrumbs { min-height: 44px; padding: 0 18px; }
-.topcrumbs ol { font-size: 14px !important; gap: 8px; }
+/* breadcrumbs: pixel face, a step larger than the 8px labels, high contrast */
+.topcrumbs, .topcrumbs button, .crumbs, .crumbs button { font-family: var(--pixel) !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; }
+.topcrumbs { min-height: 42px; padding: 0 16px; }
+.topcrumbs ol { font-size: 12px !important; gap: 8px; }
 .topcrumbs li { gap: 8px; }
-.topcrumbs button { color: #D9D5CE; font-weight: 500 !important; }
+.topcrumbs button { color: #D9D5CE; }
 .topcrumbs button:hover { color: #FFFFFF; }
 .topcrumbs li + li::before { color: rgba(255, 255, 255, 0.45); }
-.topcrumbs li:last-child button { color: #F5AD59; font-weight: 600 !important; text-underline-offset: 7px; text-decoration-thickness: 2px; }
-.crumbs { font-size: 13px; gap: 4px 6px; }
+.topcrumbs li:last-child button { color: #F5AD59; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+.crumbs { font-size: 10px; gap: 4px 6px; line-height: 1.5; }
 .crumbs button { color: #D9D5CE; }
-.crumbs li:last-child button { color: #FFFFFF; font-weight: 600; }
+.crumbs li:last-child button { color: #FFFFFF; }
 .crumbs li + li::before { color: rgba(255, 255, 255, 0.45); }
+/* left column: the same frosted glass as Example 1 */
+.left > .card { background: rgba(10, 10, 10, 0.70) !important; -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: none !important; }
+
+/* top breadcrumb and Reset to globe: same face and size as the details pane body text (General Sans 14px, like "The Savoya difference") */
+.topcrumbs, .topcrumbs button, .topright .reset { font-family: var(--font) !important; text-transform: none !important; letter-spacing: 0 !important; }
+.topcrumbs ol { font-size: 14px !important; }
+.topcrumbs button { font-weight: 400 !important; }
+.topcrumbs li:last-child button { font-weight: 500 !important; }
+.topright .reset { font-size: 14px !important; font-weight: 400 !important; }
+.row.is-primary .cnt svg { opacity: 1 !important; color: #FFFFFF; stroke-width: 2; }   /* solid white chevron on the CTA row */
 </style>
 
 <div class="app" id="app">
