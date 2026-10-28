@@ -218,7 +218,7 @@
   }
   var ptrs = {}, dragMoved = false, vel = [0, 0], lastMove = 0, pinch0 = 0;
   canvas.addEventListener("pointerdown", function (e) {
-    stopAnim(); lastInteract = Date.now();
+    stopAnim(); lastInteract = Date.now(); FX.netT0 = 0;
     ptrs[e.pointerId] = [e.clientX, e.clientY];
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     dragMoved = false; vel = [0, 0];
@@ -241,7 +241,7 @@
     rotateBy(dx, dy);
     var now = performance.now(), dt = Math.max(8, now - (lastMove || now - 16)); lastMove = now;
     vel = [dx / dt * 16, dy / dt * 16];
-    lastInteract = Date.now(); schedule();
+    lastInteract = Date.now(); FX.netT0 = 0; schedule();
   });
   function endPtr(e) {
     if (!ptrs[e.pointerId]) return;
@@ -266,7 +266,7 @@
       if (!mapInView()) return;
       if (e.deltaY > 0 && atGlobe()) return;
     }
-    e.preventDefault(); stopAnim(); lastInteract = Date.now();
+    e.preventDefault(); stopAnim(); lastInteract = Date.now(); FX.netT0 = 0;
     var r = canvas.getBoundingClientRect();
     var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     zoomAt(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0022)), e.clientX - r.left, e.clientY - r.top);
@@ -369,7 +369,7 @@
     var t = boxTransform(WORLD_BOX), to = homeLon();
     FX.introFrom = { lon: to + 95, k: t.k * 0.42 }; FX.introTo = { lon: to, k: t.k };   // swings in west to east, matching the spin
     cur.lon = FX.introFrom.lon; cur.k = FX.introFrom.k;
-    FX.introT0 = performance.now(); FX.jetT0 = FX.introT0; lastInteract = Date.now();
+    FX.introT0 = performance.now(); startNetwork(900); lastInteract = Date.now();
     app.classList.add("is-intro");
     var tm = d3.timer(function () {
       var u = introU(performance.now()), e = d3.easeCubicOut(clamp01((u - 0.12) / 0.88));
@@ -512,7 +512,9 @@
     var mode = window.SVM_CAR_MODE || "lshape";   // chosen Oct 27: airport runs with one sharp corner
     if (mode === "grid" || mode === "route") { ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round"; drawStreetCars(now, c, vis, mode); ctx.restore(); return; }
     // copper route arcs: each nearby airport draws a line in to the city
-    var aps = c.airports.filter(function (a) { return a.lat != null && d3.geoDistance([c.lon, c.lat], [a.lon, a.lat]) < 0.025; }).slice(0, 3);
+    var aps = c.airports.filter(function (a) { return a.lat != null && d3.geoDistance([c.lon, c.lat], [a.lon, a.lat]) < 0.025; }).slice(0, 3)
+      .sort(function (a, b) { return d3.geoDistance([c.lon, c.lat], [b.lon, b.lat]) - d3.geoDistance([c.lon, c.lat], [a.lon, a.lat]); })
+      .slice(0, 1);   // one car (Oct 28, keep it calm): the longest run among the main airports, so it reads clear of the city marker
     ctx.save(); ctx.lineCap = "round";
     aps.forEach(function (ap, i) {
       var ppt = P([ap.lon, ap.lat]); if (!ppt || Math.hypot(ppt[0] - cp[0], ppt[1] - cp[1]) < 14) return;
@@ -671,16 +673,85 @@
     }
     ctx.restore();
   }
+
+  // network lines: as the globe turns, each continent's hub fires thin copper lines out to its cities
+  // (plus one to the next hub), once per visit to the world view
+  var HUBS = [
+    { region: "North America", ll: [-96.8, 32.78] },   // Dallas, home base
+    { region: "South America", ll: [-46.63, -23.55] },
+    { region: "Europe", ll: [-0.13, 51.5] },
+    { region: "Africa", ll: [28.05, -26.2] },
+    { region: "Middle East", ll: [55.27, 25.2] },
+    { region: "Asia", ll: [103.8, 1.35] },
+    { region: "Australia", ll: [151.2, -33.87] }
+  ];
+  function hubTargets(h, i) {
+    if (h.targets) return h.targets;
+    var grid = {}, out = [], rnd = seeded("hub" + i);
+    cities.filter(function (c) { return c.region === h.region && d3.geoDistance(h.ll, [c.lon, c.lat]) > 0.02; })
+      .sort(function (a, b) { return d3.geoDistance(h.ll, [b.lon, b.lat]) - d3.geoDistance(h.ll, [a.lon, a.lat]); })
+      .forEach(function (c) { var k = Math.round(c.lon / 4) + ":" + Math.round(c.lat / 4); if (!grid[k]) { grid[k] = 1; out.push([c.lon, c.lat]); } });
+    out = out.slice(0, 22);
+    var next = HUBS[(i + 1) % HUBS.length].ll; out.push(next);                 // stitch the continents together
+    h.targets = out.map(function (ll) { return { ll: ll, delay: rnd() * 600, d: d3.geoDistance(h.ll, ll), gi: d3.geoInterpolate(h.ll, ll) }; });
+    return h.targets;
+  }
+  function lift3(ll, alt) { // screen point above the surface (and whether it's on the near side)
+    var q = d3.geoRotation([-cur.lon, -cur.lat])(ll), l = q[0] * Math.PI / 180, ph = q[1] * Math.PI / 180;
+    var x = Math.cos(ph) * Math.sin(l), y = Math.sin(ph), z = Math.cos(ph) * Math.cos(l);
+    return [cur.cx + cur.k * alt * x, cur.cy - cur.k * alt * y, z > 0 || (x * x + y * y) * alt * alt > 1];
+  }
+  function startNetwork(delay) { FX.netT0 = performance.now() + (delay || 0); FX.netWall = Date.now(); }
+  function netTargets() { // a spread of cities on the side of the globe the intro lands on, one per ~6 degree cell
+    if (FX.net) return FX.net;
+    var hub = HUBS[0].ll, grid = {}, out = [], rnd = seeded("net");
+    cities.slice().sort(function (a, b) { return d3.geoDistance(hub, [b.lon, b.lat]) - d3.geoDistance(hub, [a.lon, a.lat]); })
+      .forEach(function (c) {
+        var k = Math.round(c.lon / 6) + ":" + Math.round(c.lat / 6), ll = [c.lon, c.lat];
+        if (!grid[k] && d3.geoDistance(hub, ll) > 0.035 && d3.geoDistance([homeLon(), 20], ll) < 1.4) { grid[k] = 1; out.push(ll); }
+      });
+    return (FX.net = out.slice(0, 48).map(function (ll) { var d = d3.geoDistance(hub, ll); return { ll: ll, d: d, gi: d3.geoInterpolate(hub, ll), delay: rnd() * 450 }; }));
+  }
+  // intro only: hairlines shoot out from Dallas, a dot travels each line from A to B, then it all fades.
+  // Any touch of the globe ends it at once; it never replays.
+  function drawIntroNetwork(now) {
+    if (!FX.netT0 || now < FX.netT0) return;
+    if (state.level !== "world") { FX.netT0 = 0; return; }   // drag, wheel or pinch clears FX.netT0 directly
+    var el = now - FX.netT0; if (el > 3600) { FX.netT0 = 0; return; }
+    var hubLL = HUBS[0].ll, end = 1 - clamp01((el - 2700) / 900);
+    ctx.save(); ctx.lineCap = "round";
+    var hub = lift3(hubLL, 1);
+    if (hub[2]) { ctx.globalAlpha = end; ctx.fillStyle = "#F5D3A6"; ctx.beginPath(); ctx.arc(hub[0], hub[1], 2.4, 0, 6.2832); ctx.fill(); }
+    netTargets().forEach(function (tg) {
+      var t = el - tg.delay; if (t <= 0) return;
+      var draw = d3.easeCubicOut(clamp01(t / 420));                       // the line shoots out
+      var travel = d3.easeSinInOut(clamp01((t - 300) / (900 + tg.d * 250))); // the dot runs A to B along it
+      var lift = 0.02 + tg.d * 0.06, N = 30, prev = null;
+      ctx.globalAlpha = 0.55 * end; ctx.strokeStyle = "#DD9058"; ctx.lineWidth = 1; ctx.beginPath();
+      for (var k = 0; k <= N; k++) {
+        var u = draw * k / N, p = lift3(tg.gi(u), 1 + Math.sin(Math.PI * u) * lift);
+        if (p[2]) { if (prev && prev[2]) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+        prev = p;
+      }
+      ctx.stroke();
+      if (travel > 0) {
+        var dp = lift3(tg.gi(travel), 1 + Math.sin(Math.PI * travel) * lift);
+        if (dp[2]) { ctx.globalAlpha = end; ctx.fillStyle = "#F5D3A6"; ctx.beginPath(); ctx.arc(dp[0], dp[1], 1.7, 0, 6.2832); ctx.fill(); }
+      }
+    });
+    ctx.restore();
+  }
   // the overlay pass: clears and redraws only the moving pieces
   function fxDraw() {
     var now = performance.now(), c = state.city;
     var hopOn = c && FX.hopCity === c && now - FX.hopT0 < 4200;
     var carsOn = c && cur.k > kFit() * 2 && cur.k / boxTransform(areaBox(c)).k > 0.25;
-    var live = hopOn || carsOn;
+    var netOn = !!FX.netT0;
+    var live = hopOn || carsOn || netOn;
     if (!live && !fxDirty) return;
     var main = ctx; ctx = fxctx;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    if (live) { syncProj(); drawRoutesAndPulses(now); drawCityHop(now); }
+    if (live) { syncProj(); if (c) { drawRoutesAndPulses(now); drawCityHop(now); } drawIntroNetwork(now); }
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx = main;
     fxDirty = !!live;
   }
@@ -925,7 +996,6 @@
     state = { level: "world", region: null, country: null, city: null, airport: null, via: null };
     render(); setHash();
     fly(WORLD_BOX);
-    FX.jetT0 = performance.now() + 500;   // the jets make one lap each time you come back to the world
     say("Showing all regions");
   }
   function goRegion(name) {
@@ -1197,7 +1267,7 @@
         var b = el("button", "chip is-small", '<span class="dot"></span>' + esc(k) + ' <span class="n">' + n + "</span>");
         b.type = "button"; b.setAttribute("aria-label", k + ", " + n + (n === 1 ? " service area" : " service areas"));
         b.addEventListener("click", function () { goCountry(k); });
-        addMark(b, countryAnchor(k), 2);
+        var cm = addMark(b, countryAnchor(k), 2); cm.weight = countries[k].cities.length; cm.chip = true;
       });
     } else {
       var list = s.level === "country" ? countries[s.country].cities : cities;
@@ -1302,6 +1372,17 @@
     marks.forEach(function (m) { if (m.p && !m.ap && m.el.firstChild && m.el.firstChild.classList.contains("radar") && m.p[0] > 0 && m.p[0] < W && m.p[1] > 0 && m.p[1] < H) onScreen++; });
     markersEl.classList.toggle("is-dense", onScreen * 1e5 / Math.max(1, W * H) > 3.5);
     placeDock();
+    // country labels: when they crowd (Europe, or any region on a phone) the busiest countries keep their label
+    if (state.level === "region") {
+      var kept = [];
+      marks.filter(function (m) { return m.el.chip && m.p && !m.el.hasAttribute("data-off"); }).sort(function (a, b) { return b.el.weight - a.el.weight; }).forEach(function (m) {
+        if (!m.w) { m.w = m.el.offsetWidth || 90; m.h = m.el.offsetHeight || 28; }
+        var bx = [m.p[0] - 12, m.p[1] - m.h / 2 - 2, m.p[0] + m.w - 8, m.p[1] + m.h / 2 + 2];
+        var clash = kept.some(function (o) { return bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]; });
+        m.el.classList.toggle("is-hid", clash);
+        if (!clash) kept.push(bx);
+      });
+    }
     // airports only show once there is room for them next to the city
     if (state.level === "city") {
       var c = state.city, cp = P([c.lon, c.lat]) || [-9999, -9999], shown = [];
@@ -1385,7 +1466,7 @@
       bTitle.textContent = "Choose a region";
       bCount.textContent = "";   // the headline carries "300+ markets"
       regionOrder.forEach(function (r) {
-        row(r.name, "", r.countries.length + (r.countries.length === 1 ? " country · " : " countries · ") + r.cities.length, function () { goRegion(r.name); });
+        row(r.name, "", String(r.cities.length), function () { goRegion(r.name); });
       });
     } else if (s.level === "region") {
       var r = regionByName[s.region];
@@ -1479,8 +1560,7 @@
     ["london-united-kingdom", "LHR", [[90, 1, -.42, 0], [90, .97, .42, -.04]]],
     ["paris-france", "CDG", [[87, .95, -.6, -.08], [87, .7, -.42, .12], [87, .8, .42, .1], [87, 1, .6, -.05]]],
     ["dubai-united-arab-emirates", "DXB", [[120, 1, -.25, 0], [120, .98, .25, .02]]],
-    ["miami-fl", "MIA", [[87, .82, -.45, .1], [87, .65, -.3, -.15], [87, .58, .42, .1], [117, .7, .05, .05]]],
-    ["san-francisco-ca", "SFO", [[298, 1, -.09, 0], [298, .95, .09, .02], [28, .75, -.08, -.25], [28, .7, .08, -.28]]]
+    ["miami-fl", "MIA", [[87, .82, -.45, .1], [87, .65, -.3, -.15], [87, .58, .42, .1], [117, .7, .05, .05]]]
   ].map(function (p) {
     var c = bySlug[p[0]];
     return { city: c, airport: c.airports.filter(function (a) { return a.code === p[1]; })[0], runways: p[2] };
