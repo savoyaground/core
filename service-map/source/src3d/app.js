@@ -169,9 +169,39 @@
   // 3D globe: orthographic projection. cur = the camera: centre lon/lat, scale k (px per radian = globe radius),
   // and the screen point (cx, cy) the globe is centred on.
   var proj = d3.geoOrthographic().clipAngle(90).precision(0.35);
-  var path = d3.geoPath(proj, ctx);
+  var path = d3.geoPath(proj, ctx), shapePath = d3.geoPath(proj), shapes = null;
+  function shape(f) { // the country outline traced once per frame, then reused for fills and strokes
+    var p = shapes && shapes.get(f);
+    if (!p) {
+      p = new Path2D(); var tr = shapePath.context(p);
+      // close in, skip the islands and far ends of big countries that are off screen (Russia, Canada, Norway...)
+      if (shapeView && f.geometry.type === "MultiPolygon" && cur.k > 600) {
+        partsOf(f).forEach(function (q) { if (d3.geoDistance(q.c, shapeView.c) - q.r < shapeView.a) tr(q.g); });
+      } else tr(f);
+      if (shapes) shapes.set(f, p);
+    }
+    return p;
+  }
+  function partsOf(f) { // each piece of a country with its own bounding circle, worked out once
+    return f.parts || (f.parts = f.geometry.coordinates.map(function (poly) {
+      var g = { type: "Polygon", coordinates: poly }, b = d3.geoBounds(g), c = d3.geoCentroid(g);
+      var r = Math.max(d3.geoDistance(c, b[0]), d3.geoDistance(c, b[1]), d3.geoDistance(c, [b[0][0], b[1][1]]), d3.geoDistance(c, [b[1][0], b[0][1]]));
+      return { g: g, c: c, r: r + 0.01 };
+    }));
+  }
+  var shapeView = null;
+  function shapeOf(list) { var p = new Path2D(); list.forEach(function (f) { p.addPath(shape(f)); }); return p; }
   var cur = { lon: -30, lat: 24, k: 300, cx: 0, cy: 0 };
-  function syncProj() { proj.scale(cur.k).translate([cur.cx, cur.cy]).rotate([-cur.lon, -cur.lat]); }
+  var projKey = "";
+  function syncProj() { // re-aiming the projection resets its caches, so only do it when the camera actually moved
+    var key = cur.k + "," + cur.cx + "," + cur.cy + "," + cur.lon + "," + cur.lat;
+    if (key === projKey) return;
+    projKey = key;
+    // close in, the detailed map is already dense enough that bending each edge along the globe adds nothing visible
+    var prec = cur.k > 900 ? 0 : 0.35;
+    if (proj.precision() !== prec) proj.precision(prec);
+    proj.scale(cur.k).translate([cur.cx, cur.cy]).rotate([-cur.lon, -cur.lat]);
+  }
   function P(ll) { // screen point, or null when the place is on the far side of the globe
     if (d3.geoDistance(ll, [cur.lon, cur.lat]) > 1.54) return null;
     syncProj(); return proj(ll);
@@ -292,7 +322,10 @@
   var raf = 0;
   function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
   function frame() {
-    raf = 0; draw(); place(); fxDraw();
+    raf = 0; vrMemo = [null, null];
+    vrMemo = [viewRectNow(false), viewRectNow(true)];   // measured before anything on the page is moved this frame
+    draw(); place(); fxDraw();
+    vrMemo = null;
     // zoomed back out to a whole globe from a continent: tuck the crowded country labels away
     var far = state.level === "region" && cur.k < kFit() * 1.3;
     if (far !== app.classList.contains("is-far")) app.classList.toggle("is-far", far);
@@ -829,6 +862,7 @@
     sea.addColorStop(0, C.seaHi); sea.addColorStop(1, C.seaLo);
     ctx.beginPath(); path({ type: "Sphere" }); ctx.fillStyle = sea; ctx.fill();
 
+    shapes = new Map(); shapeView = vb;
     var groups = {};
     var vis = [];
     F.forEach(function (f) {
@@ -838,8 +872,7 @@
       (groups[col] = groups[col] || []).push(f);
     });
     Object.keys(groups).forEach(function (col) {
-      ctx.beginPath(); groups[col].forEach(function (f) { path(f); });
-      ctx.fillStyle = col; ctx.fill();
+      ctx.fillStyle = col; ctx.fill(shapeOf(groups[col]));
     });
     // continent hover: light green wash that eases in
     Object.keys(regFade).forEach(function (rn) {
@@ -850,20 +883,16 @@
       // brand gold gradient (copper to gold, 135deg) at the same see-through strength the green wash had
       var gg = ctx.createLinearGradient(bb[0][0], bb[0][1], bb[1][0], bb[1][1]);
       gg.addColorStop(0, C.hoverA); gg.addColorStop(1, C.hoverB);
-      ctx.beginPath(); rf.forEach(function (f) { path(f); });
-      ctx.globalAlpha = C.mintA * e; ctx.fillStyle = gg; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.globalAlpha = C.mintA * e; ctx.fillStyle = gg; ctx.fill(shapeOf(rf)); ctx.globalAlpha = 1;
     });
-    ctx.beginPath(); vis.forEach(function (f) { path(f); });
-    ctx.strokeStyle = C.border; ctx.lineWidth = 0.9; ctx.stroke();
+    ctx.strokeStyle = C.border; ctx.lineWidth = 0.9; ctx.stroke(shapeOf(vis));
 
     // faint edge on every country Savoya serves, so the tint reads against the water
-    ctx.beginPath(); vis.forEach(function (f) { if (f.svc) path(f); });
-    ctx.strokeStyle = C.servedEdge; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.strokeStyle = C.servedEdge; ctx.lineWidth = 0.8; ctx.stroke(shapeOf(vis.filter(function (f) { return f.svc; })));
     // gold edge on the focused country
     if (state.country) {
       var fc = F.filter(function (f) { return f.svc === state.country; });
-      ctx.beginPath(); fc.forEach(function (f) { path(f); });
-      ctx.strokeStyle = C.focus; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.strokeStyle = C.focus; ctx.lineWidth = 1.2; ctx.stroke(shapeOf(fc.filter(function (f) { return vis.indexOf(f) >= 0; })));
     }
     // state lines once the US is close
     if (cur.k > 500 && d3.geoDistance([cur.lon, cur.lat], [-97, 38]) < 0.75) {
@@ -964,7 +993,13 @@
 
   /* ================= Framing ================= */
   var mqPhone = window.matchMedia("(max-width: 860px)");
-  function viewRect(forDock) {
+  var vrMemo = null;
+  function viewRect(forDock) { // inside a frame the panels can't move, so measure them once and reuse it
+    if (!vrMemo) return viewRectNow(forDock);
+    var i = forDock ? 1 : 0;
+    return vrMemo[i] || (vrMemo[i] = viewRectNow(forDock));
+  }
+  function viewRectNow(forDock) {
     var topbar = document.querySelector(".topbar"), browse = document.getElementById("browse"), sheet = document.getElementById("sheet");
     var open = app.classList.contains("sheet-open");
     if (mqPhone.matches) {
@@ -1255,7 +1290,7 @@
   function nearestDot(x, y) {
     var best = null, bd = 18 * 18;
     markersEl.querySelectorAll(".radar:not(.is-dest)").forEach(function (el) {
-      if (!el._city) return;
+      if (!el._city || el.parentNode.classList.contains("is-out")) return;
       var r = el.getBoundingClientRect(), dx = r.left - x, dy = r.top - y, d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = el; }
     });
@@ -1285,9 +1320,49 @@
   }
   hoverCard.addEventListener("mouseover", function () { clearTimeout(hoverT); });
   hoverCard.addEventListener("mouseout", function (e) { if (!hoverCard.contains(e.relatedTarget)) hideHover(true); });
+
+  // country level: as the globe is dragged, cities of whatever other country comes into view pop in as
+  // live markers, and fade back out when their country leaves the view
+  var roam = {}, ROAM_MAX = 36;
+  function roamRadar(c) {
+    var r = radar(c, ""); r._city = c;
+    r.addEventListener("click", function (e) { var n = nearestDot(e.clientX, e.clientY) || r; hideHover(); goCity(n._city, { openSheet: true }); });
+    if (canHover) {
+      r.addEventListener("mousemove", function (e) { var n = nearestDot(e.clientX, e.clientY) || r; if (hoverCity !== n._city) showHover(n._city, n); else clearTimeout(hoverT); });
+      r.addEventListener("mouseleave", function () { hideHover(true); });
+    }
+    return r;
+  }
+  function updateRoam() {
+    var s = state;
+    if (s.level !== "country" && s.level !== "city") return;
+    var vr = viewRect(), cx = vr.x + vr.w / 2, cy = vr.y + vr.h / 2, pad = 24, want = [];
+    cities.forEach(function (c) {
+      if (c === s.city || c.country === s.country) return;      // already on the map from buildMarkers
+      if (s.level === "city" && d3.geoDistance([c.lon, c.lat], [s.city.lon, s.city.lat]) <= 0.12) return;
+      var p = P([c.lon, c.lat]);
+      if (!p || p[0] < pad || p[0] > W - pad || p[1] < pad || p[1] > H - pad) return;
+      want.push({ c: c, d: (p[0] - cx) * (p[0] - cx) + (p[1] - cy) * (p[1] - cy) });
+    });
+    want.sort(function (a, b) { return a.d - b.d; });
+    var keep = {};
+    want.slice(0, ROAM_MAX).forEach(function (w) { keep[w.c.slug] = w.c; });
+    Object.keys(roam).forEach(function (slug) {   // fade out the ones that left
+      var m = roam[slug]; if (keep[slug] || m.leaving) return;
+      m.leaving = true; m.el.classList.add("is-leaving"); delete domCities[slug];
+      setTimeout(function () { if (roam[slug] !== m) return; delete roam[slug]; var i = marks.indexOf(m); if (i >= 0) marks.splice(i, 1); if (m.el.parentNode) m.el.parentNode.removeChild(m.el); }, 380);
+    });
+    Object.keys(keep).forEach(function (slug) {     // pop in the ones that arrived
+      var m = roam[slug];
+      if (m && m.leaving) { m.leaving = false; m.el.classList.remove("is-leaving"); domCities[slug] = true; return; }
+      if (m) return;
+      var c = keep[slug]; addMark(roamRadar(c), [c.lon, c.lat], 1);
+      m = marks[marks.length - 1]; m.roam = true; m.el.classList.add("is-roam"); roam[slug] = m; domCities[slug] = true;
+    });
+  }
   function buildMarkers(fresh) {
     hideHover(); apRow = null; cityName = null;
-    markersEl.textContent = ""; marks = []; domCities = {}; destEl = null; dock.hidden = true; dock.textContent = "";
+    markersEl.textContent = ""; marks = []; domCities = {}; roam = {}; destEl = null; dock.hidden = true; dock.textContent = "";
     var s = state;
     if (s.level === "world") {
       regionOrder.forEach(function (r) {
@@ -1397,8 +1472,50 @@
     destEl.classList.remove("is-waiting");
     destEl.classList.remove("is-pop"); void destEl.offsetWidth; destEl.classList.add("is-pop");
   }
+  // Country and city zoom: a city dot and its name show only while it sits inside the open part of the map
+  // (an inner frame clear of the panels and the screen edge). Dragging a dot past that frame fades it out;
+  // bringing it back in fades it in. Names are kept apart so they never stack: bigger cities win a clash.
+  function frameCities() {
+    var lvl = state.level;
+    if (lvl !== "country" && lvl !== "city") return;
+    var vr = viewRect(true), inset = mqPhone.matches ? 12 : 28;
+    var x0 = vr.x + inset, x1 = vr.x + vr.w - inset, y0 = vr.y + inset, y1 = vr.y + vr.h - inset;
+    var cx = vr.x + vr.w / 2, cy = vr.y + vr.h / 2, inside = [], kept = [];
+    marks.forEach(function (m) {
+      var r = m.el.firstChild;
+      if (m.ap || !r || !r._city || !r.classList.contains("radar") || r.classList.contains("is-dest")) return;
+      var on = !!m.p && !m.el.hasAttribute("data-off") && !m.leaving && m.p[0] > x0 && m.p[0] < x1 && m.p[1] > y0 && m.p[1] < y1;
+      m.el.classList.toggle("is-out", !on);
+      if (on) inside.push(m); else r.classList.remove("show-label");
+    });
+    // keep clear of the destination dot, its printed name and its card
+    if (lvl === "city") {
+      var dp = P([state.city.lon, state.city.lat]);
+      if (dp) kept.push([dp[0] - 30, dp[1] - 30, dp[0] + 30, dp[1] + 30]);
+      marks.forEach(function (m) { if (m.ap && m.p && !m.el.classList.contains("is-hid")) kept.push([m.p[0] - 14, m.p[1] - 14, m.p[0] + 70, m.p[1] + 14]); });
+      var ar = app.getBoundingClientRect();
+      [dock, cityName].forEach(function (n) {
+        if (!n || n.hidden || !n.isConnected || n.classList.contains("is-off")) return;
+        var b = n.getBoundingClientRect(); if (b.width) kept.push([b.left - ar.left, b.top - ar.top, b.right - ar.left, b.bottom - ar.top]);
+      });
+    }
+    inside.sort(function (a, b) {
+      var ca = a.el.firstChild._city, cb = b.el.firstChild._city;
+      return (cb.featured ? 1 : 0) - (ca.featured ? 1 : 0) || cb.airports.length - ca.airports.length ||
+        ((a.p[0] - cx) * (a.p[0] - cx) + (a.p[1] - cy) * (a.p[1] - cy)) - ((b.p[0] - cx) * (b.p[0] - cx) + (b.p[1] - cy) * (b.p[1] - cy));
+    });
+    inside.forEach(function (m) {
+      var r = m.el.firstChild;
+      if (!m.lw) { var l = r.querySelector(".r-label"); m.lw = (l && l.offsetWidth) || 90; }
+      var bx = [m.p[0] - 8, m.p[1] - 12, m.p[0] + 14 + m.lw, m.p[1] + 12];
+      var fits = bx[2] < x1 + inset && !kept.some(function (o) { return bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]; });
+      r.classList.toggle("show-label", fits);
+      kept.push(fits ? bx : [m.p[0] - 8, m.p[1] - 8, m.p[0] + 8, m.p[1] + 8]);
+    });
+  }
   function place() {
     syncProj();
+    updateRoam();
     marks.forEach(function (m) {
       var p = P(m.ll);
       var off = !p || p[0] < -200 || p[0] > W + 200 || p[1] < -200 || p[1] > H + 200;
@@ -1412,6 +1529,7 @@
     marks.forEach(function (m) { if (m.p && !m.ap && m.el.firstChild && m.el.firstChild.classList.contains("radar") && m.p[0] > 0 && m.p[0] < W && m.p[1] > 0 && m.p[1] < H) onScreen++; });
     markersEl.classList.toggle("is-dense", onScreen * 1e5 / Math.max(1, W * H) > 3.5);
     placeDock();
+    frameCities();
     // country labels: when they crowd (Europe, or any region on a phone) the busiest countries keep their label
     if (state.level === "region") {
       var kept = [];

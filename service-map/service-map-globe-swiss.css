@@ -920,6 +920,38 @@
 /* the perimeter carries the sonar now: the destination keeps its glowing core, no rings */
 .svm .app.has-area-sonar .radar.is-dest .r-ring { display: none; }
 
+/* roaming city markers (country level): pop in when their country drags into view, fade out when it leaves */
+.svm .mk.is-roam .radar .r-core { animation: svm-pop 560ms cubic-bezier(.34, 1.56, .64, 1) both; }
+.svm .mk.is-roam { transition: opacity 360ms var(--ease); }
+.svm .mk.is-roam.is-leaving { opacity: 0; pointer-events: none; }
+/* city dots fade out past the inner frame of the map and back in as they cross it */
+.svm .mk > .radar:not(.is-dest) { transition: opacity 380ms var(--ease); }
+.svm .mk.is-out > .radar { opacity: 0; }
+.svm .mk.is-out, .svm .mk.is-out * { pointer-events: none !important; }
+.svm .mk > .radar:not(.is-dest) .r-core { transition: transform 460ms cubic-bezier(.34, 1.56, .64, 1); }
+.svm .mk.is-out > .radar .r-core { transform: scale(0.3); }
+/* intro: the left panes fade up one after the other */
+@keyframes svm-pane-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (min-width: 861px) {
+  .svm.is-ready .svm-left > * { animation: svm-pane-in 600ms var(--ease) both; }
+  .svm.is-ready .svm-left > *:nth-child(1) { animation-delay: 250ms; }
+  .svm.is-ready .svm-left > *:nth-child(2) { animation-delay: 420ms; }
+  .svm.is-ready .svm-left > *:nth-child(3) { animation-delay: 590ms; }
+}
+@media (prefers-reduced-motion: reduce) { .svm.is-ready .svm-left > * { animation: none; } .svm .mk.is-roam .radar .r-core { animation: none; } }
+
+/* stats row: semibold copper-to-gold numbers, consistent with "Savoya worldwide" in the details pane */
+.svm .sw-stats b { font-weight: 600 !important; letter-spacing: -0.02em; background: linear-gradient(135deg, #C56129 0%, #F5AD59 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #DD9058; width: max-content; }
+/* airport tiles: full colour always; gradient keyline on hover (as in Example 1) */
+@media (min-width: 861px) {
+  .svm .svm-pop .thumb, .svm .pop-list > li:first-child .thumb { filter: none !important; position: relative; }
+  .svm .svm-pop .thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: linear-gradient(135deg, #C56129, #F5AD59);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+    opacity: 0; transition: opacity 200ms var(--ease); }
+  .svm .svm-pop:hover .thumb::after, .svm .svm-pop:focus-visible .thumb::after { opacity: 1; }
+}
+
 /* ---------- Webflow mount ---------- */
 .svm { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
   background: #0B0B0C; overflow: hidden; isolation: isolate; }

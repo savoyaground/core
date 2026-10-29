@@ -840,6 +840,26 @@ a { color: inherit; }
 .pop-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #C56129 0%, #F5AD59 100%); border-radius: 3px; }
 .pop-list::-webkit-scrollbar-thumb:horizontal { background: linear-gradient(90deg, #C56129 0%, #F5AD59 100%); }
 }
+
+/* roaming city markers (country level): pop in when their country drags into view, fade out when it leaves */
+.mk.is-roam .radar .r-core { animation: pop 560ms cubic-bezier(.34, 1.56, .64, 1) both; }
+.mk.is-roam { transition: opacity 360ms var(--ease); }
+.mk.is-roam.is-leaving { opacity: 0; pointer-events: none; }
+/* city dots fade out past the inner frame of the map and back in as they cross it */
+.mk > .radar:not(.is-dest) { transition: opacity 380ms var(--ease); }
+.mk.is-out > .radar { opacity: 0; }
+.mk.is-out, .mk.is-out * { pointer-events: none !important; }
+.mk > .radar:not(.is-dest) .r-core { transition: transform 460ms cubic-bezier(.34, 1.56, .64, 1); }
+.mk.is-out > .radar .r-core { transform: scale(0.3); }
+/* intro: the left panes fade up one after the other */
+@keyframes pane-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (min-width: 861px) {
+  :root.is-ready .left > * { animation: pane-in 600ms var(--ease) both; }
+  :root.is-ready .left > *:nth-child(1) { animation-delay: 250ms; }
+  :root.is-ready .left > *:nth-child(2) { animation-delay: 420ms; }
+  :root.is-ready .left > *:nth-child(3) { animation-delay: 590ms; }
+}
+@media (prefers-reduced-motion: reduce) { :root.is-ready .left > * { animation: none; } .mk.is-roam .radar .r-core { animation: none; } }
 </style>
 
 <div class="app" id="app">

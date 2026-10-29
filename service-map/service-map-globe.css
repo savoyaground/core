@@ -837,6 +837,26 @@
 .svm .pop-list::-webkit-scrollbar-thumb:horizontal { background: linear-gradient(90deg, #C56129 0%, #F5AD59 100%); }
 }
 
+/* roaming city markers (country level): pop in when their country drags into view, fade out when it leaves */
+.svm .mk.is-roam .radar .r-core { animation: svm-pop 560ms cubic-bezier(.34, 1.56, .64, 1) both; }
+.svm .mk.is-roam { transition: opacity 360ms var(--ease); }
+.svm .mk.is-roam.is-leaving { opacity: 0; pointer-events: none; }
+/* city dots fade out past the inner frame of the map and back in as they cross it */
+.svm .mk > .radar:not(.is-dest) { transition: opacity 380ms var(--ease); }
+.svm .mk.is-out > .radar { opacity: 0; }
+.svm .mk.is-out, .svm .mk.is-out * { pointer-events: none !important; }
+.svm .mk > .radar:not(.is-dest) .r-core { transition: transform 460ms cubic-bezier(.34, 1.56, .64, 1); }
+.svm .mk.is-out > .radar .r-core { transform: scale(0.3); }
+/* intro: the left panes fade up one after the other */
+@keyframes svm-pane-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (min-width: 861px) {
+  .svm.is-ready .svm-left > * { animation: svm-pane-in 600ms var(--ease) both; }
+  .svm.is-ready .svm-left > *:nth-child(1) { animation-delay: 250ms; }
+  .svm.is-ready .svm-left > *:nth-child(2) { animation-delay: 420ms; }
+  .svm.is-ready .svm-left > *:nth-child(3) { animation-delay: 590ms; }
+}
+@media (prefers-reduced-motion: reduce) { .svm.is-ready .svm-left > * { animation: none; } .svm .mk.is-roam .radar .r-core { animation: none; } }
+
 /* ---------- Webflow mount ---------- */
 .svm { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
   background: #0B0B0C; overflow: hidden; isolation: isolate; }
