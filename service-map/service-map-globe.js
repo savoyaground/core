@@ -116,33 +116,42 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     if (anchorMemo[name]) return anchorMemo[name];
     var cs = countries[name].cities.filter(inFrame);
     var m = [d3.mean(cs, function (c) { return c.lon; }), d3.mean(cs, function (c) { return c.lat; })];
-    return (anchorMemo[name] = insideAnchor(name, m));
+    var at = insideAnchor(name, m);
+    if (F50 !== F110) anchorMemo[name] = at;   // keep it once the detailed coastlines are in (the rough ones put coastal pins at sea)
+    return at;
   }
   // The average of a country's cities can land outside it (Canada's cities hug the US border, so the
   // average sits in Minnesota). Keep the pin on the country's own land, well clear of its border,
   // as close to that average as possible.
   var anchorMemo = {};
+  function refreshAnchors() { // the detailed coastlines just arrived: re-seat the country pins on them
+    anchorMemo = {};
+    marks.forEach(function (m) { if (m.el.country) m.ll = countryAnchor(m.el.country); });
+  }
   function insideAnchor(name, m) {
     var fs = F50.filter(function (f) { return f.svc === name; });
     if (!fs.length) return m;
     var inside = function (p) { return fs.some(function (f) { return d3.geoContains(f, p); }); };
-    var deep = function (p, r) { return inside(p) && inside([p[0] + r * 1.4, p[1]]) && inside([p[0] - r * 1.4, p[1]]) && inside([p[0], p[1] + r]) && inside([p[0], p[1] - r]); };
+    var deep = function (p, r) {   // the point and a ring of 8 points around it all on the country's land
+      if (!inside(p)) return false;
+      for (var a = 0; a < 8; a++) { var t = a * Math.PI / 4; if (!inside([p[0] + Math.cos(t) * r * 1.4, p[1] + Math.sin(t) * r])) return false; }
+      return true;
+    };
     var b = countryBox(name), w = b[0][0], s = b[0][1], e = b[1][0], n = b[1][1];
     var r = Math.max(0.4, Math.min(3, (n - s) / 6));
-    if (deep(m, r)) return m;
+    if (deep(m, r)) return m;   // already well inside: leave it where it was
     var grid = [];   // try points nearest the average first and stop at the first one that is well inside
     for (var i = 0; i <= 30; i++) for (var j = 0; j <= 30; j++) {
       var p = [w + (e - w) * i / 30, s + (n - s) * j / 30];
       grid.push({ p: p, d: d3.geoDistance(p, m) });
     }
     grid.sort(function (a, b) { return a.d - b.d; });
-    var any = null;
-    for (var k = 0; k < grid.length; k++) {
-      if (!inside(grid[k].p)) continue;
-      if (!any) any = grid[k].p;
-      if (deep(grid[k].p, r)) return grid[k].p;
+    // narrow countries (Great Britain, Italy, Chile) can't fit the full margin, so ask for less, step by step
+    var landed = grid.filter(function (g) { return inside(g.p); });
+    for (var t = r; t >= r / 8; t /= 2) {
+      for (var k = 0; k < landed.length; k++) if (deep(landed[k].p, t)) return landed[k].p;
     }
-    return any || m;
+    return landed.length ? landed[0].p : m;
   }
   function padBox(w, s, e, n, pad, minLon, minLat) {
     var cx = (w + e) / 2, cy = (s + n) / 2;
@@ -1475,7 +1484,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
         var b = el("button", "chip is-small", '<span class="dot"></span>' + esc(k) + ' <span class="n">' + n + "</span>");
         b.type = "button"; b.setAttribute("aria-label", k + ", " + n + (n === 1 ? " service area" : " service areas"));
         b.addEventListener("click", function () { goCountry(k); });
-        var cm = addMark(b, countryAnchor(k), 2); cm.weight = countries[k].cities.length; cm.chip = true;
+        var cm = addMark(b, countryAnchor(k), 2); cm.weight = countries[k].cities.length; cm.chip = true; cm.country = k;
       });
     } else {
       var list = s.level === "country" ? countries[s.country].cities : cities;
@@ -2330,7 +2339,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
 
   var hadHash = location.hash.length > 1;
   if (location.hash.length > 1) applyToken(location.hash, true);
-  TOPO.load50(function (t) { F50 = feats(t); schedule(); });
+  TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });
   if (!hadHash) startIntro();
 
 };

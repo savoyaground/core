@@ -101,7 +101,7 @@ if (js.includes("  var zoom = d3.zoom()")) rep(`  var zoom = d3.zoom()
     })`);
 rep(`  if (location.hash.length > 1) applyToken(location.hash, true);`,
 `  if (location.hash.length > 1) applyToken(location.hash, true);
-  TOPO.load50(function (t) { F50 = feats(t); schedule(); });`);
+  TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });`);
 // drop the prototype test hook
 js = js.replace(/\n  \/\/ test hook for the prototype review[\s\S]*?\n\}\)\(\);\s*$/, () => { applied++; return "\n};\n"; });
 js = js.replace(/^\(function \(\) \{\n  "use strict";/, () => { applied++; return 'window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {\n  "use strict";'; });

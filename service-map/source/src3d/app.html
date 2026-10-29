@@ -135,6 +135,9 @@ a { color: inherit; }
 .chip .dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--lit);
   box-shadow: 0 0 0 3px rgba(var(--lit-rgb), 0.14), 0 0 10px rgba(var(--lit-rgb), 0.5); }
 .chip.is-small { padding: 6px 10px 6px 8px; font-size: 12px; }
+/* country pins: the dot sits exactly on the country's spot and the name reads off to the right
+   (centring the whole label pushed the dot west, e.g. the UK's out over the Irish Sea) */
+.markers .chip.is-small:not(.has-lm) { transform: translate(-13px, -50%); }
 .mk-enter { animation: mk-in 420ms var(--ease) both; }
 @keyframes mk-in { from { opacity: 0; } to { opacity: 1; } }
 
