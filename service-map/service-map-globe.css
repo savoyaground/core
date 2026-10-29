@@ -828,6 +828,14 @@
 }
 /* the perimeter carries the sonar now: the destination keeps its glowing core, no rings */
 .svm .app.has-area-sonar .radar.is-dest .r-ring { display: none; }
+/* Popular airports list: 3px copper-to-gold scrollbar line (thin enough to stay quiet, wide enough to grab) */
+@media (min-width: 861px) {
+@supports (-moz-appearance: none) { .svm .pop-list { scrollbar-width: thin; scrollbar-color: #DD9058 transparent; } }   /* Firefox only: solid copper (no gradient support); Chrome ignores ::-webkit-scrollbar when these are set */
+.svm .pop-list::-webkit-scrollbar { width: 3px; height: 3px; }
+.svm .pop-list::-webkit-scrollbar-track { background: rgba(20, 19, 19, 0.06); border-radius: 3px; margin: 6px 0; }
+.svm .pop-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #C56129 0%, #F5AD59 100%); border-radius: 3px; }
+.svm .pop-list::-webkit-scrollbar-thumb:horizontal { background: linear-gradient(90deg, #C56129 0%, #F5AD59 100%); }
+}
 
 /* ---------- Webflow mount ---------- */
 .svm { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
