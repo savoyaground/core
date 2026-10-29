@@ -572,15 +572,15 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     var cx = d3.mean(pts, function (p) { return p[0]; }), cy = d3.mean(pts, function (p) { return p[1]; });
     var line = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.5)).context(ctx);
     ctx.save(); ctx.lineJoin = "round";
-    for (var k = 0; k < 3; k++) {   // three staggered waves: 4.5s each, 1.5s apart
-      var u = ((now / 4500) + k / 3) % 1, e = d3.easeCubicOut(u), s = 1 + 0.16 * e;
+    for (var k = 0; k < 3; k++) {   // three staggered waves: 6s each, 2s apart
+      var u = ((now / 6000) + k / 3) % 1, e = d3.easeSinOut(u), s = 1 + 0.16 * e;   // 6s waves, gentle ease (no burst off the edge)
       var ring = pts.map(function (p) { return [cx + (p[0] - cx) * s, cy + (p[1] - cy) * s]; });
       ctx.globalAlpha = vis * 0.8 * (1 - u) * (1 - u);
       ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 1.5 - u;
       ctx.beginPath(); line(ring); ctx.stroke();
     }
     // soft glow hugging the perimeter, breathing with the waves
-    var b = 0.5 + 0.5 * Math.sin(now / 4500 * Math.PI * 2);
+    var b = 0.5 + 0.5 * Math.sin(now / 6000 * Math.PI * 2);
     ctx.globalAlpha = vis * (0.18 + 0.14 * b); ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 6; ctx.filter = "blur(4px)";
     ctx.beginPath(); line(pts); ctx.stroke(); ctx.filter = "none";
     ctx.restore();
