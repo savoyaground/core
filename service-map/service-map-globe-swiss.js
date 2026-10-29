@@ -1912,6 +1912,14 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       return;
     }
     syncProj();
+    var nc = cityNear(x, y, 22), ncm = nc && markOf(nc);
+    if (nc && !(ncm && ncm.el.classList.contains("is-out"))) {   // a faint city dot: it's clickable, so say so
+      setOcean(false); canvas.classList.add("is-pointer");
+      tip.innerHTML = esc(nc.label) + "<small>View service area</small>";
+      tip.hidden = false;
+      tip.style.transform = "translate(" + Math.min(x + 14, W - tip.offsetWidth - 8) + "px," + (y + 16) + "px)";
+      return;
+    }
     var f = featAt(x, y);
     setOcean(!f);
     if (f !== hoverFeat) { hoverFeat = f; schedule(); }
@@ -1934,10 +1942,36 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     tip.style.transform = "translate(" + tx + "px," + (y + 16) + "px)";
   });
   canvas.addEventListener("pointerleave", function () { hoverFeat = null; hoverReg = null; hideTip(); kickFade(); if (!dragHeld) setOcean(false); });
+  // Country and city zoom: a click that lands just beside a city (the faint dots that have no live marker,
+  // or a near miss on a live one) goes to that city instead of falling through to the country underneath,
+  // which used to fly the map off to a neighbouring country or region.
+  function cityNear(x, y, rad) {
+    if (state.level !== "country" && state.level !== "city") return null;
+    var best = null, bd = rad * rad;
+    cities.forEach(function (c) {
+      if (state.level === "city" && c === state.city) return;
+      var p = P([c.lon, c.lat]); if (!p) return;
+      var d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y);
+      if (d < bd) { bd = d; best = c; }
+    });
+    return best;
+  }
+  function markOf(c) { // the city's live marker, if it has one
+    for (var i = 0; i < marks.length; i++) { var r = marks[i].el.firstChild; if (r && r._city === c) return marks[i]; }
+    return null;
+  }
   canvas.addEventListener("click", function (e) {
     if (dragMoved) return;
     var r = canvas.getBoundingClientRect();
     syncProj();
+    var cx0 = e.clientX - r.left, cy0 = e.clientY - r.top;
+    if (state.level === "city" && nearDrawn.some(function (d) { return Math.hypot(d.x - cx0, d.y - cy0) < 10; })) return;   // a surrounding town
+    var near = cityNear(cx0, cy0, 22);
+    if (near) {
+      var nm = markOf(near);
+      if (nm && nm.el.classList.contains("is-out")) return;   // faded out at the edge of the map: ignore, don't jump away
+      hideHover(); return goCity(near, { openSheet: true });
+    }
     var f = featAt(e.clientX - r.left, e.clientY - r.top);
     if (!f) return;
     if (state.level === "world" && f.reg && regionByName[f.reg]) return goRegion(f.reg);
