@@ -47,8 +47,36 @@
 
   function countryAnchor(name) {
     if (name === "United States") return [-97.5, 38.5];
+    if (anchorMemo[name]) return anchorMemo[name];
     var cs = countries[name].cities.filter(inFrame);
-    return [d3.mean(cs, function (c) { return c.lon; }), d3.mean(cs, function (c) { return c.lat; })];
+    var m = [d3.mean(cs, function (c) { return c.lon; }), d3.mean(cs, function (c) { return c.lat; })];
+    return (anchorMemo[name] = insideAnchor(name, m));
+  }
+  // The average of a country's cities can land outside it (Canada's cities hug the US border, so the
+  // average sits in Minnesota). Keep the pin on the country's own land, well clear of its border,
+  // as close to that average as possible.
+  var anchorMemo = {};
+  function insideAnchor(name, m) {
+    var fs = F50.filter(function (f) { return f.svc === name; });
+    if (!fs.length) return m;
+    var inside = function (p) { return fs.some(function (f) { return d3.geoContains(f, p); }); };
+    var deep = function (p, r) { return inside(p) && inside([p[0] + r * 1.4, p[1]]) && inside([p[0] - r * 1.4, p[1]]) && inside([p[0], p[1] + r]) && inside([p[0], p[1] - r]); };
+    var b = countryBox(name), w = b[0][0], s = b[0][1], e = b[1][0], n = b[1][1];
+    var r = Math.max(0.4, Math.min(3, (n - s) / 6));
+    if (deep(m, r)) return m;
+    var grid = [];   // try points nearest the average first and stop at the first one that is well inside
+    for (var i = 0; i <= 30; i++) for (var j = 0; j <= 30; j++) {
+      var p = [w + (e - w) * i / 30, s + (n - s) * j / 30];
+      grid.push({ p: p, d: d3.geoDistance(p, m) });
+    }
+    grid.sort(function (a, b) { return a.d - b.d; });
+    var any = null;
+    for (var k = 0; k < grid.length; k++) {
+      if (!inside(grid[k].p)) continue;
+      if (!any) any = grid[k].p;
+      if (deep(grid[k].p, r)) return grid[k].p;
+    }
+    return any || m;
   }
   function padBox(w, s, e, n, pad, minLon, minLat) {
     var cx = (w + e) / 2, cy = (s + n) / 2;
