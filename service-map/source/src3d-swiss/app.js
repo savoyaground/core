@@ -184,7 +184,7 @@
       land: tok("--land"), served: tok("--land-served"), scope: tok("--land-scope"), active: tok("--land-active"),
       hover: tok("--land-hover"), green: tok("--land-green"), mintRGB: tok("--mint-rgb"), hoverA: tok("--hover-a") || "#C56129", hoverB: tok("--hover-b") || "#F5AD59", mintA: +tok("--mint-alpha") || 0.25,
       litRGB: tok("--lit-rgb"), gold: tok("--gold"),
-      nearDot: tok("--near-dot"), nearText: tok("--near-text"), nearHalo: tok("--near-halo"), nearEdge: tok("--near-edge"), areaEdge: tok("--area-edge"),
+      lit2RGB: tok("--lit-rgb") || "246, 203, 79", nearDot: tok("--near-dot"), nearText: tok("--near-text"), nearHalo: tok("--near-halo"), nearEdge: tok("--near-edge"), areaEdge: tok("--area-edge"),
       seaHi: tok("--sea-hi"), seaLo: tok("--sea-lo"), glowRGB: tok("--glow-rgb"), limbRGB: tok("--limb-rgb"), limbA: +tok("--limb-alpha") || 0.3,
       grid: tok("--map-grid"), servedEdge: tok("--map-served-edge"), border: tok("--map-border"), states: tok("--map-states"), focus: tok("--map-focus"), ring: tok("--map-ring"), dot: tok("--map-dot")
     };
@@ -496,10 +496,38 @@
   }
   // landmark badges on the continent labels (vector line art, copper on dark glass)
   var LANDMARK = {"North America": "<g fill='currentColor'><path d='M15.7 1c1 .9 1 2.1.1 2.8-.7-.6-.9-1.7-.1-2.8Z'/><path d='M15 3.9h1.5l-.5 1.1-.6 4.4-1.5-.3.8-4.1Z'/><path d='M9.2 5.3 8.4 4l1.5.5.3-1.6.7 1.5.8-1.4.3 1.6 1.3-.7-.6 1.5Z'/><circle cx='11.2' cy='6.6' r='1.2'/><path d='M9.6 8.1h3.3l1.1 2-.7 7.8H9.4l-.3-6-1.3-.3 1-1.5Z'/><path d='M7.6 10.4l1.6-.4.5 2.6-1.6.3Z'/><path d='M8.3 18.2h6.2v1.5H8.3zM7.3 19.9h8.2V22H7.3z'/></g>", "South America": "<g fill='currentColor'><circle cx='12' cy='4.3' r='1.35'/><path d='M10.7 6.1h2.6l.35 1.25 6.9.15v1.1l-6.95.45-.3 8.7h-2.6l-.3-8.7-6.95-.45V7.5l6.9-.15Z'/><path d='M9.6 17.6h4.8V20H9.6z'/></g><path d='M2.5 22c3.2-2.8 6-3.4 9.5-3.4s6.3.6 9.5 3.4' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>", "Europe": "<g fill='none' stroke='currentColor' stroke-width='1.25' stroke-linejoin='round' stroke-linecap='round'><path d='M12 1.5v2.3'/><path d='M10.9 3.8h2.2l.5 5h-3.2Z'/><path d='M9.6 8.8h4.8M10.4 8.8 8.9 13.6h6.2l-1.5-4.8'/><path d='M7.8 13.6h8.4'/><path d='M8.9 13.6 6 21.5h3c.6-2.7 1.6-4 3-4s2.4 1.3 3 4h3l-2.9-7.9'/></g>", "Asia": "<g fill='currentColor'><path d='M11.75 1.2h.5v2h-.5z'/><path d='M12 3.1c.3.9 1.2 1.3 1.9 2 1.1 1 1.6 2.3 1.4 3.6H8.7c-.2-1.3.3-2.6 1.4-3.6.7-.7 1.6-1.1 1.9-2Z'/><path fill-rule='evenodd' d='M7.4 9.2h9.2v8.6H7.4Zm3.2 8.6v-3.3c0-.9.6-1.6 1.4-1.6s1.4.7 1.4 1.6v3.3Z'/><path d='M7.7 9.2c0-1 .5-1.6 1.2-1.9.7.3 1.2.9 1.2 1.9ZM13.9 9.2c0-1 .5-1.6 1.2-1.9.7.3 1.2.9 1.2 1.9Z'/><path d='M4.1 7.6h1.2v10.2H4.1zM18.7 7.6h1.2v10.2h-1.2zM4 7.6l.7-1.4.7 1.4ZM18.6 7.6l.7-1.4.7 1.4Z'/><path d='M2.3 17.8h19.4v1.7H2.3z'/></g>", "Australia": "<g fill='currentColor'><path d='M2.8 16.8C3.6 11 6.6 7.8 10.2 6.8 9 10 8.7 13.4 9.2 16.8Z'/><path d='M8.6 16.8c.9-5.4 3.9-8.3 7.4-9.1-1.3 3-1.5 6.2-1 9.1Z' opacity='.85'/><path d='M14.4 16.8c.9-4.3 3.3-6.7 6.6-7.3-1.2 2.4-1.3 4.8-.8 7.3Z' opacity='.7'/><path d='M1.8 16.8h20.4v1.8H1.8z'/></g><path d='M3 21h6.5M12 21h9' fill='none' stroke='currentColor' stroke-width='1.1' stroke-linecap='round' opacity='.7'/>", "Africa": "<g fill='currentColor'><path d='M9 4.5 17 19H1Z'/><path d='M16.6 9.5 23 19H10.2Z' opacity='.6'/><path d='M1 20.2h22v1.2H1z'/></g>", "Middle East": "<g fill='currentColor'><path d='M11.65 .8h.7v3.1h.5v4h.6v4h.8v5h.8v4.4H8.95v-4.4h.8v-5h.8v-4h.6v-4h.5Z'/><path d='M7 21.6h10v.9H7z'/></g>"};
+
+  // service-area sonar: the destination's radar rings move out to the perimeter, so the reach reads as the
+  // whole area (cars go well past the metroplex), not just the city centre
+  function drawAreaSonar(now, c, vis) {
+    var A = areaPoints(c); if (!A.hull || reduced) return false;
+    var pts = [], back = false;
+    A.hull.forEach(function (ll) { var q = P(ll); if (!q) back = true; else pts.push(q); });
+    if (back || pts.length < 3) return false;
+    var cx = d3.mean(pts, function (p) { return p[0]; }), cy = d3.mean(pts, function (p) { return p[1]; });
+    var line = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.5)).context(ctx);
+    ctx.save(); ctx.lineJoin = "round";
+    for (var k = 0; k < 3; k++) {   // three staggered waves: 4.5s each, 1.5s apart
+      var u = ((now / 4500) + k / 3) % 1, e = d3.easeCubicOut(u), s = 1 + 0.16 * e;
+      var ring = pts.map(function (p) { return [cx + (p[0] - cx) * s, cy + (p[1] - cy) * s]; });
+      ctx.globalAlpha = vis * 0.8 * (1 - u) * (1 - u);
+      ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 1.5 - u;
+      ctx.beginPath(); line(ring); ctx.stroke();
+    }
+    // soft glow hugging the perimeter, breathing with the waves
+    var b = 0.5 + 0.5 * Math.sin(now / 4500 * Math.PI * 2);
+    ctx.globalAlpha = vis * (0.18 + 0.14 * b); ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 6; ctx.filter = "blur(4px)";
+    ctx.beginPath(); line(pts); ctx.stroke(); ctx.filter = "none";
+    ctx.restore();
+    return true;
+  }
   function drawRoutesAndPulses(now) {
-    var c = state.city; if (!c) { FX.arcFor = null; return; }
+    var sonarOff = function () { if (FX.sonarOn) { FX.sonarOn = false; app.classList.remove("has-area-sonar"); } };
+    var c = state.city; if (!c) { FX.arcFor = null; sonarOff(); return; }
     if (FX.arcFor !== c) { FX.arcFor = c; FX.arcT0 = now; }
-    var kArea = boxTransform(areaBox(c)).k, vis = clamp01((cur.k / kArea - 0.25) / 0.3); if (vis <= 0) return;
+    var kArea = boxTransform(areaBox(c)).k, vis = clamp01((cur.k / kArea - 0.25) / 0.3); if (vis <= 0) { sonarOff(); return; }
+    var sonarOn = drawAreaSonar(now, c, vis);
+    if (sonarOn !== FX.sonarOn) { FX.sonarOn = sonarOn; app.classList.toggle("has-area-sonar", sonarOn); }
     var cp = P([c.lon, c.lat]); if (!cp) return;
     // land the lines on the destination light itself (its DOM marker can sit a few px off the raw point)
     var cr = canvas.getBoundingClientRect();
@@ -702,31 +730,44 @@
     return [cur.cx + cur.k * alt * x, cur.cy - cur.k * alt * y, z > 0 || (x * x + y * y) * alt * alt > 1];
   }
   function startNetwork(delay) { FX.netT0 = performance.now() + (delay || 0); FX.netWall = Date.now(); }
-  function netTargets() { // a spread of cities on the side of the globe the intro lands on, one per ~6 degree cell
+  // intro network: random city-to-city routes across the world (no single hub), e.g. Paris to New York,
+  // Berlin to Mexico City; only routes whose ends face the viewer when the intro settles
+  var NET_PAIRS = [["paris-france", "new-york-city-ny"], ["berlin-germany", "mexico-city-mexico"], ["london-united-kingdom", "dubai-united-arab-emirates"],
+    ["tokyo-japan", "los-angeles-ca"], ["sao-paulo-brazil", "miami-fl"], ["toronto-canada", "london-united-kingdom"], ["rome-italy", "chicago-il"],
+    ["singapore-singapore", "sydney-australia"], ["madrid-spain", "bogota-colombia"], ["black-car-service-zurich-switzerland", "boston-ma"], ["dubai-united-arab-emirates", "singapore-singapore"],
+    ["san-francisco-ca", "vancouver-canada"], ["cancun-mexico", "dallas-fort-worth-tx"], ["amsterdam-netherlands", "washington-d-c"], ["madrid-spain", "miami-fl"]];
+  function netTargets() {
     if (FX.net) return FX.net;
-    var hub = HUBS[0].ll, grid = {}, out = [], rnd = seeded("net");
-    cities.slice().sort(function (a, b) { return d3.geoDistance(hub, [b.lon, b.lat]) - d3.geoDistance(hub, [a.lon, a.lat]); })
-      .forEach(function (c) {
-        var k = Math.round(c.lon / 6) + ":" + Math.round(c.lat / 6), ll = [c.lon, c.lat];
-        if (!grid[k] && d3.geoDistance(hub, ll) > 0.035 && d3.geoDistance([homeLon(), 20], ll) < 1.4) { grid[k] = 1; out.push(ll); }
-      });
-    return (FX.net = out.slice(0, 48).map(function (ll) { var d = d3.geoDistance(hub, ll); return { ll: ll, d: d, gi: d3.geoInterpolate(hub, ll), delay: rnd() * 450 }; }));
+    var view = [homeLon(), 22], rnd = seeded("net-routes"), out = [], used = {};
+    var facing = function (c) { return c && d3.geoDistance(view, [c.lon, c.lat]) < 1.45; };
+    function add(a, b) {
+      if (!a || !b || a === b) return;
+      var k = a.slug < b.slug ? a.slug + "|" + b.slug : b.slug + "|" + a.slug; if (used[k]) return;
+      var A = [a.lon, a.lat], B = [b.lon, b.lat], d = d3.geoDistance(A, B); if (d < 0.12) return;   // skip short hops
+      used[k] = 1; out.push({ a: A, b: B, d: d, gi: d3.geoInterpolate(A, B), delay: rnd() * 700 });
+    }
+    NET_PAIRS.forEach(function (p) { var a = bySlug[p[0]], b = bySlug[p[1]]; if (facing(a) && facing(b)) add(a, b); });
+    var pool = cities.filter(facing);
+    for (var n = 0; n < 400 && out.length < 26 && pool.length > 1; n++) {   // fill with random long routes between different regions
+      var a = pool[Math.floor(rnd() * pool.length)], b = pool[Math.floor(rnd() * pool.length)];
+      if (a.region !== b.region || d3.geoDistance([a.lon, a.lat], [b.lon, b.lat]) > 0.5) add(a, b);
+    }
+    return (FX.net = out);
   }
-  // intro only: hairlines shoot out from Dallas, a dot travels each line from A to B, then it all fades.
+  // intro only: hairlines draw from A to B with a dot running along each, then it all fades.
   // Any touch of the globe ends it at once; it never replays.
   function drawIntroNetwork(now) {
     if (!FX.netT0 || now < FX.netT0) return;
     if (state.level !== "world") { FX.netT0 = 0; return; }   // drag, wheel or pinch clears FX.netT0 directly
-    var el = now - FX.netT0; if (el > 3600) { FX.netT0 = 0; return; }
-    var hubLL = HUBS[0].ll, end = 1 - clamp01((el - 2700) / 900);
+    var el = now - FX.netT0; if (el > 3800) { FX.netT0 = 0; return; }
+    var end = 1 - clamp01((el - 2900) / 900);
     ctx.save(); ctx.lineCap = "round";
-    var hub = lift3(hubLL, 1);
-    if (hub[2]) { ctx.globalAlpha = end; ctx.fillStyle = "#F5D3A6"; ctx.beginPath(); ctx.arc(hub[0], hub[1], 2.4, 0, 6.2832); ctx.fill(); }
     netTargets().forEach(function (tg) {
       var t = el - tg.delay; if (t <= 0) return;
-      var draw = d3.easeCubicOut(clamp01(t / 420));                       // the line shoots out
-      var travel = d3.easeSinInOut(clamp01((t - 300) / (900 + tg.d * 250))); // the dot runs A to B along it
-      var lift = 0.02 + tg.d * 0.06, N = 30, prev = null;
+      var draw = d3.easeCubicOut(clamp01(t / (380 + tg.d * 160)));             // the line draws out from A
+      var travel = d3.easeSinInOut(clamp01((t - 250) / (900 + tg.d * 300)));    // the dot runs A to B along it
+      var lift = 0.02 + tg.d * 0.07, N = 32, prev = null;
+      var a0 = lift3(tg.a, 1); if (a0[2]) { ctx.globalAlpha = end * 0.9; ctx.fillStyle = "#F5D3A6"; ctx.beginPath(); ctx.arc(a0[0], a0[1], 1.4, 0, 6.2832); ctx.fill(); }
       ctx.globalAlpha = 0.55 * end; ctx.strokeStyle = "#DD9058"; ctx.lineWidth = 1; ctx.beginPath();
       for (var k = 0; k <= N; k++) {
         var u = draw * k / N, p = lift3(tg.gi(u), 1 + Math.sin(Math.PI * u) * lift);
@@ -747,11 +788,12 @@
     var hopOn = c && FX.hopCity === c && now - FX.hopT0 < 4200;
     var carsOn = c && cur.k > kFit() * 2 && cur.k / boxTransform(areaBox(c)).k > 0.25;
     var netOn = !!FX.netT0;
+    if (!carsOn && FX.sonarOn) { FX.sonarOn = false; app.classList.remove("has-area-sonar"); }
     var live = hopOn || carsOn || netOn;
     if (!live && !fxDirty) return;
     var main = ctx; ctx = fxctx;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    if (live) { syncProj(); if (c) { drawRoutesAndPulses(now); drawCityHop(now); } drawIntroNetwork(now); }
+    if (live) { syncProj(); if (c) drawRoutesAndPulses(now); drawIntroNetwork(now); }
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx = main;
     fxDirty = !!live;
   }
@@ -1015,7 +1057,6 @@
   function goCity(c, opts) {
     opts = opts || {};
     var same = state.city === c, prevCountry = state.country, prevLevel = state.level;
-    if (!same && !reduced) { FX.hopCity = c; FX.hopT0 = performance.now() + 900; }   // one plane flies in once the camera is on its way
     state = { level: "city", region: c.region, country: c.country, city: c, airport: opts.airport || null, via: opts.via || null };
     if (!opts.keepSheet) closeSheet(true);
     render(!same);
@@ -1423,6 +1464,45 @@
   document.addEventListener("keydown", function (e) {
     if (e.key === "/" && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")) { e.preventDefault(); document.getElementById("q").focus(); }
   });
+
+  /* ---- site button glow (duplicated from core/buttons.js): pointer light + constant-speed comet ---- */
+  (function () {
+    var SEL = ".glow-grad, .glow-key", HEAD = 0.97 * 360, STEPS = 64, made = {}, styleEl = null;
+    function track(e) {
+      var btn = e.target.closest && e.target.closest(SEL); if (!btn) return;
+      var r = btn.getBoundingClientRect(), sx = btn.offsetWidth / r.width || 1, sy = btn.offsetHeight / r.height || 1;
+      btn.style.setProperty("--mx", (e.clientX - r.left) * sx + "px"); btn.style.setProperty("--my", (e.clientY - r.top) * sy + "px");
+      fit(btn);
+    }
+    function angleAt(x, y) { return (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360; }
+    function pointAt(d, w, h) {
+      var P = 2 * (w + h), hw = w / 2, hh = h / 2; d = ((d % P) + P) % P;
+      if (d < hw) return [d, -hh]; d -= hw; if (d < h) return [hw, -hh + d]; d -= h; if (d < w) return [hw - d, hh]; d -= w; if (d < h) return [-hw, hh - d]; d -= h; return [-hw + d, -hh];
+    }
+    function build(ratio) {
+      var name = "glow-orbit-" + Math.round(ratio * 10); if (made[name]) return name;
+      var w = ratio, h = 1, P = 2 * (w + h), start = (h / 2) * Math.tan((HEAD - 360) * Math.PI / 180), frames = [], prev = null, turn = 0;
+      for (var i = 0; i <= STEPS; i++) {
+        var a; if (i === 0) a = HEAD; else if (i === STEPS) a = HEAD + 360 - turn; else { var p = pointAt(start + P * i / STEPS, w, h); a = angleAt(p[0], p[1]); }
+        if (prev !== null && a < prev - 180) turn += 360; prev = a;
+        frames.push((i * 100 / STEPS).toFixed(4) + "%{--glow-angle:" + (a + turn - HEAD).toFixed(3) + "deg}");
+      }
+      if (!styleEl) { styleEl = document.getElementById("glow-orbit-keyframes") || document.createElement("style"); styleEl.id = "glow-orbit-keyframes"; if (!styleEl.parentNode) document.head.appendChild(styleEl); }
+      styleEl.appendChild(document.createTextNode("@keyframes " + name + "{" + frames.join("") + "}")); made[name] = true; return name;
+    }
+    function fit(btn) {
+      var w = btn.offsetWidth, h = btn.offsetHeight; if (!w || !h) return;
+      var name = build(Math.min(12, Math.max(1, Math.round((w / h) * 10) / 10)));
+      if (btn.style.getPropertyValue("--orbit-anim") !== name) btn.style.setProperty("--orbit-anim", name);
+    }
+    document.addEventListener("pointermove", track, { passive: true });
+    document.addEventListener("pointerdown", track, { passive: true });
+    // footer links carry data-glow (build-safe markup); give them the glow classes once the sheet renders
+    new MutationObserver(function () {
+      Array.prototype.forEach.call(document.querySelectorAll("[data-glow]"), function (el) { el.classList.add(el.getAttribute("data-glow") === "key" ? "glow-key" : "glow-grad"); el.removeAttribute("data-glow"); });
+    }).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("focusin", function (e) { var b = e.target.closest && e.target.closest(SEL); if (b) fit(b); });
+  })();
   /* ================= Browse panel ================= */
   var topCrumbs = document.getElementById("topCrumbs");
   var crumbs = document.getElementById("crumbs"), list = document.getElementById("list");
@@ -1491,7 +1571,7 @@
       var c = s.city;
       bTitle.textContent = c.label;
       bCount.textContent = c.airports.length + " airports";
-      row("View service details", "Airports, coverage and booking", "", function () { openSheet(); }, "is-primary");
+      row("View service details", "Airports, coverage and booking", "", function () { openSheet(); }, "is-primary glow-grad");
       var hasPins = c.airports.some(function (a) { return a.lat != null; });
       if (hasPins) {
         var sub = el("li", "sub", "Narrow to an airport"); list.appendChild(sub);
@@ -1739,8 +1819,8 @@
       '<section class="sh-sec"><h3>Savoya worldwide</h3><div class="stats">' + STATS.map(function (s) { return "<div><b>" + s[0] + "</b><span>" + s[1] + "</span></div>"; }).join("") + "</div>" +
         '<figure class="quote"><blockquote>“Savoya is the best in the business. I have never had a single issue in the four years that I’ve used their services.”</blockquote><figcaption><b>Carly Veazey</b>, Executive Assistant, Zillow Group</figcaption></figure></section>' +
       "</div>" +
-      '<footer class="sh-foot"><a class="btn btn-primary" href="' + BOOK + '" target="_blank" rel="noopener">Book Now</a>' +
-      '<a class="btn btn-ghost" href="' + SITE + "/service-areas/" + c.slug + '" target="_blank" rel="noopener">Learn more<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/></svg></a></footer>';
+      '<footer class="sh-foot"><a class="btn btn-primary" data-glow="grad" href="' + BOOK + '" target="_blank" rel="noopener">Book Now</a>' +
+      '<a class="btn btn-ghost" data-glow="key" href="' + SITE + "/service-areas/" + c.slug + '" target="_blank" rel="noopener">Learn more<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/></svg></a></footer>';
 
     sheet.querySelector(".sh-close").addEventListener("click", function () { closeSheet(); });
     var cb = sheet.querySelector(".sh-link .copy");

@@ -733,6 +733,101 @@
 .svm .svm-pop:hover, .svm .svm-pop:focus-visible { border-color: transparent; background: rgba(245, 173, 89, 0.06); }
 .svm .svm-pop:hover::before, .svm .svm-pop:focus-visible::before { opacity: 1; }
 .svm .svm-row.is-primary .cnt svg { opacity: 1 !important; color: #FFFFFF; stroke-width: 2; }   /* solid white chevron on the CTA row */
+/* ================= Ivory glass panes (Oct 29 feedback) =================
+   left column and details pane: Savoya Ivory #FFFCF8 as frosted glass, dark ink inside */
+.svm .app[data-map] .svm-left, .svm .app[data-map] .sheet {
+  --text: #141313; --text-2: #2C2C2C; --muted: #666666; --tint-rgb: 20, 19, 19; --icon-ink: #141313;
+  --hairline: rgba(20, 19, 19, 0.10); --hairline-strong: rgba(20, 19, 19, 0.18); --sw-hair: rgba(20, 19, 19, 0.12);
+  --surface-2: rgba(20, 19, 19, 0.04); --copper-light: #A9501F; --green-soft: #2E8A55; --sh-top: rgba(255, 252, 248, 0);
+  color-scheme: light; color: var(--text);
+}
+.svm .app[data-map] .svm-left > .svm-card, .svm .app[data-map] .sheet {
+  background: rgba(255, 252, 248, 0.90) !important; -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+  border-color: rgba(255, 255, 255, 0.55) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+.svm .app[data-map] .svm-left .crumbs button { color: #666666; }
+.svm .app[data-map] .svm-left .crumbs li:last-child button { color: #141313; }
+.svm .app[data-map] .svm-left .crumbs li + li::before { color: rgba(20, 19, 19, 0.35); }
+.svm .app[data-map] .svm-left #svm-q { background: rgba(255, 255, 255, 0.55); border-color: rgba(20, 19, 19, 0.18); color: #141313; }
+.svm .app[data-map] .svm-left #svm-q::placeholder { color: #666666; }
+.svm .app[data-map] .svm-left #svm-q:focus { border-color: #C56129; background: #FFFFFF; }
+.svm .app[data-map] .svm-left .sw-kbd { color: #A9501F; border-color: rgba(169, 80, 31, 0.4); }
+.svm .app[data-map] .svm-left .topbar h1 em { background: linear-gradient(135deg, #C56129 0%, #E0913F 100%); -webkit-background-clip: text; background-clip: text; }
+.svm .app[data-map] .browse.is-world .svm-row:hover { background: #141313; }
+.svm .app[data-map] .browse.is-world .svm-row:hover b { color: #FFFCF8; }
+.svm .app[data-map] .browse.is-world .svm-row:hover .cnt { color: #F5AD59; }
+.svm .app[data-map] .svm-left .svm-row.is-on { background: rgba(197, 97, 41, 0.12); }
+.svm .app[data-map] .svm-left .results { background: #FFFCF8; border-color: rgba(20, 19, 19, 0.14); }
+.svm .app[data-map] .svm-pop .pt small { color: #2C2C2C; }
+@media (max-width: 860px) {
+  .svm .app[data-map] .svm-left > .popular { background: none !important; border: 0 !important; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none !important; }
+  .svm .app[data-map] .svm-pop { background: rgba(255, 252, 248, 0.92) !important; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.55) !important; }
+}
+.svm .app[data-map] .sheet .sh-head { background: radial-gradient(90% 120% at 100% 0%, rgba(197, 97, 41, 0.10), transparent 60%); }
+.svm .app[data-map] .sheet .overline { color: #A9501F; }
+.svm .app[data-map] .sheet .sh-foot { background: rgba(255, 252, 248, 0.96); }
+.svm .app[data-map] .sheet .svm-btn-ghost { color: #141313; border-color: rgba(20, 19, 19, 0.25); }
+.svm .app[data-map] .sheet .svm-btn-ghost:hover { border-color: #C56129; }
+.svm .app[data-map] .sheet .tabs { background: rgba(20, 19, 19, 0.05); }
+.svm .app[data-map] .sheet .tabs button[aria-selected="true"] { background: #FFFFFF; color: #141313; box-shadow: 0 1px 2px rgba(20, 19, 19, 0.08); }
+.svm .app[data-map] .sheet .sh-close { color: #2C2C2C; border-color: rgba(20, 19, 19, 0.2); }
+.svm .app[data-map] .sheet .sh-link a, .svm .app[data-map] .sheet .sh-link button { color: #141313; border-color: rgba(20, 19, 19, 0.2); }
+/* "Savoya worldwide" stats: numbers in the same copper-to-gold gradient as "300+ markets" */
+.svm .svm-stats b { background: linear-gradient(135deg, #C56129 0%, #F5AD59 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #DD9058; width: max-content; }
+.svm .app[data-map] .sheet .svm-stats div { background: #141313; }
+.svm .app[data-map] .sheet .svm-stats { background: rgba(255, 255, 255, 0.12); border-color: rgba(20, 19, 19, 0.2); }
+.svm .app[data-map] .sheet .svm-stats span { color: #C9C6C2; }   /* light grey labels: readable on the black cells */
+
+/* ================= Site button hover, duplicated from core/buttons.css (btn-gradient, btn-keyline is-black) =================
+   so the map's CTAs feel like savoya.com, not a widget. Classes: .glow-grad (gold gradient fill), .glow-key (black keyline). */
+@property --glow-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --spot { syntax: "<number>"; inherits: true; initial-value: 0; }
+@keyframes svm-glow-spin { to { --glow-angle: 360deg; } }
+.svm .glow-grad, .svm .glow-key{
+  --comet-speed: 2.5s; --glow-ease: cubic-bezier(.37, 0, .63, 1); --keyline-width: 1.5px;
+  --mx: 50%; --my: 100%; --spot: 0; --lift: 0 0 0 0 transparent;
+  position: relative; isolation: isolate; border-color: transparent !important;
+  transition: --spot .45s var(--glow-ease), transform .45s var(--glow-ease), box-shadow .45s var(--glow-ease), color .45s var(--glow-ease), filter .2s;
+}
+@media (hover: hover) { .svm .glow-grad:hover, .svm .glow-key:hover{ --spot: 1; transform: scale(1.04); filter: none !important; } }
+.svm .glow-grad:active, .svm .glow-key:active{ transform: scale(1.01); }
+.svm .glow-grad:focus-visible, .svm .glow-key:focus-visible{ --spot: 1; transform: scale(1.04); outline: 2px solid #C56129; outline-offset: 4px; }
+/* gold gradient: white light follows the pointer, white head runs the edge */
+.svm .glow-grad{ background-image: linear-gradient(135deg, #C56129 0%, #F5AD59 100%) !important; color: #FFFCF8;
+  --lift: 0 6px 18px rgba(197, 97, 41, 0.22), 0 2px 6px rgba(44, 44, 44, 0.12); }
+.svm .glow-grad::after{ content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; mix-blend-mode: screen; pointer-events: none;
+  background: radial-gradient(110px circle at var(--mx) var(--my), rgb(255 255 255 / calc(0.42 * var(--spot))) 0%, rgb(255 255 255 / calc(0.18 * var(--spot))) 45%, rgb(255 255 255 / 0) 75%); }
+.svm .glow-grad::before{ content: ""; position: absolute; inset: 0; z-index: 2; padding: var(--keyline-width); border-radius: inherit; pointer-events: none;
+  background: conic-gradient(from var(--glow-angle), rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 84%, #FFFFFF 96%, rgba(255, 255, 255, 0) 98.5%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  opacity: 0; transition: opacity .45s var(--glow-ease);
+  animation: var(--orbit-anim, svm-glow-spin) var(--comet-speed) linear infinite paused; }
+@media (hover: hover) { .svm .glow-grad:hover{ box-shadow: var(--lift); } .svm .glow-grad:hover::before { opacity: 1; animation-play-state: running; } }
+.svm .glow-grad:focus-visible{ box-shadow: var(--lift); outline-color: #F5AD59; }
+.svm .glow-grad:focus-visible::before{ opacity: 1; animation-play-state: running; }
+/* keyline (is-black on Ivory): black gradient keyline, copper head runs it on hover, gold light follows the pointer */
+.svm .glow-key{ --keyline-ink: #141313; --keyline-a: #141313; --keyline-b: rgba(20, 19, 19, 0.45); --keyline-head: #C56129;
+  background-color: transparent !important; color: var(--keyline-ink) !important; border: 0 !important; box-shadow: none !important; }
+.svm .glow-key::before{ content: ""; position: absolute; inset: 0; z-index: 2; padding: var(--keyline-width); border-radius: inherit; pointer-events: none;
+  background:
+    conic-gradient(from var(--glow-angle), rgba(197, 97, 41, 0) 0%, rgba(197, 97, 41, 0) 84%, rgb(197 97 41 / calc(0.95 * var(--spot))) 96%, rgba(197, 97, 41, 0) 98.5%) border-box,
+    linear-gradient(135deg, var(--keyline-a) 0%, var(--keyline-b) 100%) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  animation: var(--orbit-anim, svm-glow-spin) var(--comet-speed) linear infinite paused; }
+.svm .glow-key::after{ content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(110px circle at var(--mx) var(--my), rgb(245 173 89 / calc(0.22 * var(--spot))) 0%, rgb(197 97 41 / calc(0.12 * var(--spot))) 45%, rgb(197 97 41 / 0) 75%); }
+@media (hover: hover) { .svm .glow-key:hover::before{ animation-play-state: running; } }
+.svm .glow-key:focus-visible::before{ animation-play-state: running; }
+.svm .browse .svm-list { overflow-x: visible; }
+.svm .svm-row.is-primary.glow-grad { transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+.svm .glow-grad, .svm .glow-key, .svm .glow-grad:hover, .svm .glow-key:hover, .svm .glow-grad:active, .svm .glow-key:active, .svm .glow-grad:focus-visible, .svm .glow-key:focus-visible{ transform: none; }
+.svm .glow-grad::before, .svm .glow-grad::after, .svm .glow-key::before, .svm .glow-key::after{ animation: none; }
+}
+/* the perimeter carries the sonar now: the destination keeps its glowing core, no rings */
+.svm .app.has-area-sonar .radar.is-dest .r-ring { display: none; }
 
 /* ---------- Webflow mount ---------- */
 .svm { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
