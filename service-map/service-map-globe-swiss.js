@@ -410,7 +410,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
   var SPIN_DEG_S = 10;   // degrees per second, west to east like the real Earth
   function idleSpin() {
     if (reduced) return;
-    var last = 0, v = 0;
+    var last = 0, v = 0, lastDraw = 0;
     d3.timer(function (t) {
       var dt = Math.min(0.05, (t - last) / 1000); last = t;
       var on = !(anim || spin || !onScreen || document.hidden || Date.now() - lastInteract < 1800 || Object.keys(ptrs).length || cur.k > kFit() * 1.08);   // turns whenever you are out at globe scale
@@ -418,7 +418,8 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       v += (target - v) * Math.min(1, dt * 1.6);          // ease the speed in and out
       if (!on) { if (v < 0.01) { v = 0; return; } if (anim || spin || Object.keys(ptrs).length) { v = 0; return; } }
       if (v < 0.002) return;
-      cur.lon -= SPIN_DEG_S * v * dt; if (cur.lon < -180) cur.lon += 360; schedule();
+      cur.lon -= SPIN_DEG_S * v * dt; if (cur.lon < -180) cur.lon += 360;
+      if (t - lastDraw >= 32) { lastDraw = t; schedule(); }   // the idle turn redraws at 30fps: just as smooth at this speed, half the work
     });
   }
 
@@ -945,10 +946,10 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
   }
   // keeps frames coming while something is alive on screen (twinkle, pulses, arcs, intro)
   function ambient() {
-    var lastFx = 0;
+    var lastFx = 0, lastIntro = 0;
     d3.timer(function (t) {
       if (document.hidden || !onScreen) return;
-      if (FX.introT0 && !reduced) schedule();
+      if (FX.introT0 && !reduced && t - lastIntro >= 32) { lastIntro = t; schedule(); }   // intro at 30fps too
       if (t - lastFx > 33) { lastFx = t; fxDraw(); }
     });
   }
@@ -2355,7 +2356,18 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
 
   var hadHash = location.hash.length > 1;
   if (location.hash.length > 1) applyToken(location.hash, true);
-  TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });
+  // detailed coastlines (241 KB): fetched on the first touch of the map, a deep link, or once the page has settled
+  (function () {
+    var done = false, go = function () {
+      if (done) return; done = true;
+      TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });
+    };
+    if (location.hash.length > 1) return go();
+    ["pointerdown", "wheel", "keydown", "touchstart"].forEach(function (n) { app.addEventListener(n, go, { once: true, passive: true }); });
+    window.addEventListener("hashchange", go, { once: true });
+    var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 1); };
+    setTimeout(function () { idle(go, { timeout: 3000 }); }, 6000);
+  })();
   if (!hadHash) startIntro();
 
 };

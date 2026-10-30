@@ -101,7 +101,18 @@ if (js.includes("  var zoom = d3.zoom()")) rep(`  var zoom = d3.zoom()
     })`);
 rep(`  if (location.hash.length > 1) applyToken(location.hash, true);`,
 `  if (location.hash.length > 1) applyToken(location.hash, true);
-  TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });`);
+  // detailed coastlines (241 KB): fetched on the first touch of the map, a deep link, or once the page has settled
+  (function () {
+    var done = false, go = function () {
+      if (done) return; done = true;
+      TOPO.load50(function (t) { F50 = feats(t); refreshAnchors(); schedule(); });
+    };
+    if (location.hash.length > 1) return go();
+    ["pointerdown", "wheel", "keydown", "touchstart"].forEach(function (n) { app.addEventListener(n, go, { once: true, passive: true }); });
+    window.addEventListener("hashchange", go, { once: true });
+    var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 1); };
+    setTimeout(function () { idle(go, { timeout: 3000 }); }, 6000);
+  })();`);
 // drop the prototype test hook
 js = js.replace(/\n  \/\/ test hook for the prototype review[\s\S]*?\n\}\)\(\);\s*$/, () => { applied++; return "\n};\n"; });
 js = js.replace(/^\(function \(\) \{\n  "use strict";/, () => { applied++; return 'window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {\n  "use strict";'; });
@@ -112,19 +123,20 @@ if (!js.startsWith("window.SavoyaServiceMap")) throw new Error("wrap failed");
 css = css.replace(/--font:\s*"Inter",/, '--font: "Generalsans", "Inter",');
 css += `
 /* ---------- Webflow mount ---------- */
-:root { position: relative; display: block; height: calc(100svh - var(--svm-top, 0px)); min-height: 560px;
+:root { position: relative; display: block; height: calc(100svh - var(--svm-top, 88px)); min-height: 560px;
   background: #0B0B0C; overflow: hidden; isolation: isolate; }
 :root.is-error .svm-loading i { display: none; }
 .app { height: 100%; }
 .svm-loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 50; pointer-events: none;
   transition: opacity 400ms var(--ease); }
-.svm-loading i { width: 10px; height: 10px; border-radius: 50%; background: #F6CB4F; box-shadow: 0 0 0 0 rgba(246, 203, 79, 0.6);
+.svm-loading i { position: relative; width: 10px; height: 10px; border-radius: 50%; background: #F6CB4F; }
+.svm-loading i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(246, 203, 79, 0.6);
   animation: svm-wait 1.4s ease-out infinite; }
-@keyframes svm-wait { to { box-shadow: 0 0 0 26px rgba(246, 203, 79, 0); } }
+@keyframes svm-wait { to { transform: scale(6.2); opacity: 0; } }
 .svm-loading p { margin: 64px 0 0; position: absolute; font-size: 13px; color: #8E8B85; }
 :root:not(.is-ready) .app > :not(canvas) { visibility: hidden; }
 :root.is-ready .svm-loading { opacity: 0; }
-@media (max-width: 860px) { :root { height: calc(100svh - var(--svm-top, 0px) - 56px); min-height: 520px; } }
+@media (max-width: 860px) { :root { height: calc(100svh - var(--svm-top, 88px) - 56px); min-height: 520px; } }
 `;
 markup = '<div class="svm-loading" aria-hidden="true"><i></i><p>Loading map</p></div>' + markup;
 
@@ -150,6 +162,9 @@ const scoped = postcss([
 const RESET = `/* Savoya service map. Scoped under .svm; built from the approved prototype. */
 .svm :where(:not(svg, svg *, .svm-loading, .svm-loading *)) { all: revert; }
 .svm [hidden] { display: none !important; }
+/* hold the map's space from the first paint, before the script fills it, so the footer doesn't jump (CLS) */
+#svc-map { display: block; height: calc(100svh - var(--svm-top, 88px)); min-height: 560px; background: #0B0B0C; }
+@media (max-width: 860px) { #svc-map { height: calc(100svh - var(--svm-top, 88px) - 56px); min-height: 520px; } }
 `;
 fs.writeFileSync(path.join(OUT, "service-map.css"), RESET + scoped.trim() + "\n");
 
