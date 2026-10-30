@@ -200,7 +200,14 @@
   var fxctx = fxCanvas.getContext("2d"), fxDirty = false;
   // pause all motion while the map is scrolled out of view
   var onScreen = true;
-  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; if (onScreen) schedule(); }).observe(canvas);
+  // the globe's idle spin rests after 15 s with nobody around, and wakes on any mouse-over, touch or scroll back to the map
+  // (a page that animates forever never goes quiet: it costs battery, and speed tests keep counting it)
+  var lastWake = Date.now(), SPIN_REST_MS = 15000;
+  function wake() { lastWake = Date.now(); }
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { var was = onScreen; onScreen = es[0].isIntersecting; if (onScreen) { if (!was) wake(); schedule(); } }).observe(canvas);
+  var wakeT = 0;
+  app.addEventListener("pointermove", function () { var n = Date.now(); if (n - wakeT > 500) { wakeT = n; wake(); } }, { passive: true });
+  ["pointerdown", "wheel", "keydown", "touchstart"].forEach(function (n) { app.addEventListener(n, wake, { passive: true }); });
   var markersEl = document.getElementById("markers");
   var W = 0, H = 0, dpr = 1;
   // 3D globe: orthographic projection. cur = the camera: centre lon/lat, scale k (px per radian = globe radius),
@@ -348,7 +355,7 @@
     var last = 0, v = 0, lastDraw = 0;
     d3.timer(function (t) {
       var dt = Math.min(0.05, (t - last) / 1000); last = t;
-      var on = !(anim || spin || !onScreen || document.hidden || Date.now() - lastInteract < 1800 || Object.keys(ptrs).length || cur.k > kFit() * 1.08);   // turns whenever you are out at globe scale
+      var on = !(anim || spin || !onScreen || document.hidden || Date.now() - lastInteract < 1800 || Date.now() - lastWake > SPIN_REST_MS || Object.keys(ptrs).length || cur.k > kFit() * 1.08);   // turns whenever you are out at globe scale
       var target = on ? (hoverReg ? 0.25 : 1) : 0;
       v += (target - v) * Math.min(1, dt * 1.6);          // ease the speed in and out
       if (!on) { if (v < 0.01) { v = 0; return; } if (anim || spin || Object.keys(ptrs).length) { v = 0; return; } }
