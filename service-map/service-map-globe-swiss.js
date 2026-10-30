@@ -339,6 +339,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     if (cur.lon > 180) cur.lon -= 360; if (cur.lon < -180) cur.lon += 360;
   }
   function zoomAt(f, px, py) { // scale by f, keeping the place under the pointer still
+    zoomT = performance.now();
     syncProj();
     var before = px != null ? proj.invert([px, py]) : null;
     cur.k = Math.max(kFit() * 0.9, Math.min(K_MAX, cur.k * f));
@@ -423,7 +424,15 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
 
   var raf = 0;
   function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+  // Motion mode, the way games and map apps keep things smooth: while the globe is being dragged, zoomed,
+  // flung or flown, draw the lighter coastlines and rest the decorative effects; the moment it settles,
+  // one more frame sharpens everything back to full detail.
+  var zoomT = 0, sharpT = 0, isMoving = false;
+  function movingNow() { return !!(anim || spin || (dragMoved && Object.keys(ptrs).length) || performance.now() - zoomT < 180); }
   function frame() {
+    var mv = movingNow();
+    if (mv !== isMoving) { isMoving = mv; app.classList.toggle("is-moving", mv); }
+    if (mv) { clearTimeout(sharpT); sharpT = setTimeout(schedule, 200); }
     raf = 0; vrMemo = [null, null];
     vrMemo = [viewRectNow(false), viewRectNow(true)];   // measured before anything on the page is moved this frame
     draw(); place(); fxDraw();
@@ -560,7 +569,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
   function drawCar(x, y, ang) {
     ctx.save();
     ctx.translate(x, y); ctx.rotate(ang + Math.PI / 2); ctx.scale(0.85, 0.85); ctx.translate(-5, -9);
-    ctx.shadowColor = "rgba(245,173,89,0.85)"; ctx.shadowBlur = 9;
+    ctx.shadowColor = "rgba(245,173,89,0.85)"; ctx.shadowBlur = isMoving ? 0 : 9;
     ctx.fillStyle = "#DD9058"; ctx.fill(CAR_BODY);
     ctx.shadowBlur = 0; ctx.fillStyle = "rgba(20,19,19,0.85)"; ctx.fill(CAR_GLASS);
     ctx.lineWidth = 0.6; ctx.strokeStyle = "rgba(255,230,200,0.55)"; ctx.stroke(CAR_BODY);
@@ -651,8 +660,10 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     }
     // soft glow hugging the perimeter, breathing with the waves
     var b = 0.5 + 0.5 * Math.sin(now / 6000 * Math.PI * 2);
-    ctx.globalAlpha = vis * (0.18 + 0.14 * b); ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 6; ctx.filter = "blur(4px)";
-    ctx.beginPath(); line(pts); ctx.stroke(); ctx.filter = "none";
+    ctx.globalAlpha = vis * (0.18 + 0.14 * b); ctx.strokeStyle = "rgba(" + C.lit2RGB + ",1)"; ctx.lineWidth = 6;
+    if (isMoving) {   // mid-motion: two soft strokes stand in for the blur, which is costly to redo every frame
+      ctx.globalAlpha *= 0.55; ctx.lineWidth = 9; ctx.beginPath(); line(pts); ctx.stroke(); ctx.lineWidth = 4; ctx.beginPath(); line(pts); ctx.stroke();
+    } else { ctx.filter = "blur(4px)"; ctx.beginPath(); line(pts); ctx.stroke(); ctx.filter = "none"; }
     ctx.restore();
     return true;
   }
@@ -686,7 +697,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
       var m = Math.max(1, Math.round(pts.length * prog));
       var g = ctx.createLinearGradient(ppt[0], ppt[1], cp[0], cp[1]);
       g.addColorStop(0, "rgba(221,144,88,0.12)"); g.addColorStop(1, "rgba(245,173,89,0.7)");
-      ctx.globalAlpha = vis; ctx.strokeStyle = g; ctx.lineWidth = 1.4; ctx.shadowColor = "rgba(197,97,41,0.8)"; ctx.shadowBlur = 8;
+      ctx.globalAlpha = vis; ctx.strokeStyle = g; ctx.lineWidth = 1.4; ctx.shadowColor = "rgba(197,97,41,0.8)"; ctx.shadowBlur = isMoving ? 0 : 8;
       ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (var k = 1; k < m; k++) ctx.lineTo(pts[k][0], pts[k][1]); ctx.stroke();
       // a little black car (top view) rides the arc: it leads the line in, then keeps making the run slowly
       var cf = prog < 1 ? prog : (reduced ? 1 : ((now - FX.arcT0 - 400 - i * 600 - 2800) / 1000 / (12 + i * 2.5)) % 1);   // an unhurried run
@@ -947,7 +958,7 @@ window.SavoyaServiceMap = function (DATA, TOPO, CONT, THUMBS) {
     ctx.clearRect(0, 0, W, H);
     syncProj();
     var vb = visibleBounds();
-    var F = cur.k > 900 ? F50 : F110;
+    var F = cur.k > 900 && !(isMoving && cur.k < 2600) ? F50 : F110;   // lighter outlines mid-motion out at region scale
 
     // the globe: atmosphere glow, sea with a soft light from the upper left (no lat/long grid, Oct 27 feedback)
     var gx = cur.cx, gy = cur.cy, R0 = cur.k, now = performance.now();

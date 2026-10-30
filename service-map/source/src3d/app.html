@@ -138,7 +138,11 @@ a { color: inherit; }
 /* country pins: the dot sits exactly on the country's spot and the name reads off to the right
    (centring the whole label pushed the dot west, e.g. the UK's out over the Irish Sea) */
 .markers .chip.is-small:not(.has-lm) { transform: translate(-13px, -50%); }
-.mk-enter { animation: mk-in 420ms var(--ease) both; }
+/* motion mode: while the globe moves, the sonar rings rest and labels drop their background blur
+   (re-blurring a moving map under every label each frame is the costliest thing a browser can do here) */
+.app.is-moving .r-ring { animation-play-state: paused; visibility: hidden; }
+.app.is-moving .markers .chip, .app.is-moving .markers .ap-chip { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.mk-enter { animation: mk-in 420ms var(--ease) backwards; }
 @keyframes mk-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* radar marker: core, halo and sonar rings (itinerary motion language) */
@@ -156,7 +160,7 @@ a { color: inherit; }
   box-shadow: 0 0 0 2px rgba(var(--lit-rgb), 0.10), 0 0 6px 1px rgba(var(--lit-rgb), 0.3); }
 .markers.is-dense .radar:not(.is-dest) .r-ring { display: none; }
 .markers.is-dense .radar:not(.is-dest):hover .r-core { transform: scale(1.6); }
-@keyframes sonar { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(4.2); opacity: 0; border-width: 0.5px; } }
+@keyframes sonar { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(4.2); opacity: 0; } }   /* transform + opacity only, so the browser runs it off the main thread */
 .radar:hover .r-core { transform: scale(1.35); }
 .r-label {
   position: absolute; left: 12px; top: -10px; white-space: nowrap; pointer-events: none;
@@ -176,7 +180,7 @@ a { color: inherit; }
   animation: sonar-big 3000ms cubic-bezier(.16, .7, .3, 1) infinite; }
 .radar.is-dest .r-ring:nth-child(2) { animation-delay: 1000ms; }
 .radar.is-dest .r-ring:nth-child(3) { animation-delay: 2000ms; }
-@keyframes sonar-big { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(7.5); opacity: 0; border-width: 0.5px; } }
+@keyframes sonar-big { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(7.5); opacity: 0; } }   /* transform + opacity only, so the browser runs it off the main thread */
 .radar.is-dest .r-label { display: none; }
 .radar.is-dest.is-waiting { opacity: 0; }
 .radar.is-dest.is-pop .r-core { animation: pop 640ms cubic-bezier(.34, 1.56, .64, 1) both; }
@@ -462,7 +466,7 @@ a { color: inherit; }
 .reset { display: inline-flex; align-items: center; gap: 8px;
   height: 40px; padding: 0 16px 0 14px; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
   background: var(--surface-glass); border: 1px solid var(--hairline-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); transition: border-color 160ms var(--ease); animation: mk-in 320ms var(--ease) both; }
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); transition: border-color 160ms var(--ease); animation: mk-in 320ms var(--ease) backwards; }
 .reset:hover { border-color: rgba(var(--green-rgb), 0.6); }
 .reset svg { width: 16px; height: 16px; color: var(--green-soft); }
 .mapmode { display: inline-flex; height: 40px; padding: 3px; gap: 2px; border-radius: var(--radius);
@@ -857,7 +861,7 @@ a { color: inherit; }
 /* intro: the left panes fade up one after the other */
 @keyframes pane-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (min-width: 861px) {
-  :root.is-ready .left > * { animation: pane-in 600ms var(--ease) both; }
+  :root.is-ready .left > * { animation: pane-in 600ms var(--ease) backwards; }
   :root.is-ready .left > *:nth-child(1) { animation-delay: 250ms; }
   :root.is-ready .left > *:nth-child(2) { animation-delay: 420ms; }
   :root.is-ready .left > *:nth-child(3) { animation-delay: 590ms; }
