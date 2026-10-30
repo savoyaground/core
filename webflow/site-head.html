@@ -1,0 +1,89 @@
+<!-- ==================================================
+     SITE · HEAD   (Site settings → Custom code → Head code)
+     Source: savoyaground/core/webflow/site-head.html
+     Always use FULL commit hashes in jsDelivr URLs.
+================================================== -->
+
+<!-- Open the jsDelivr connection early so the git-linked files arrive sooner -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+<!-- Buttons (pairs with buttons.js) and fade-in / reveal-up starting states (pairs with animation.js) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/savoyaground/core@d0ef2ac4332e06e79db7f958a1b5ffedeecd3168/buttons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/savoyaground/animation@48c389af7971f80979bba1a6a6c16eef8c9732b7/animation.css">
+
+<!-- Nav (Concept 01) open/active/hover states. nav.min.js adds these classes, so Webflow's Style "Clean up" sees them as unused and deletes them. Kept here so they can't be cleaned up. -->
+<style id="nc1-states">
+.nc1-tab-text.nc1-active{font-weight:600}.nc1-tab-line.is-active{opacity:1}.nc1-tab-line.nc1-active{opacity:1;transform:scaleX(1)}.nc1-bl-top.is-open,.nc1-bl-top.nc1-open{transform:translateY(7px) rotate(45deg)}.nc1-bl-mid.nc1-open{opacity:0}.nc1-bl-bot.nc1-open{transform:translateY(-7px) rotate(-45deg)}.nc1-panel.nc1-open{opacity:1;visibility:visible;transform:translateY(0px)}.nc1-col.nc1-active{background-color:var(--background-dark)}.nc1-col-head.nc1-active{color:var(--white)}.nc1-col-label.nc1-active{color:var(--white)}.nc1-chev.nc1-open{border-right-color:var(--gradient-start);border-bottom-color:var(--gradient-start);transform:rotate(-135deg)}.nc1-col-rule.nc1-active{background-color:var(--medium-grey)}.nc1-link.nc1-active{color:var(--white)}.nc1-link.nc1-active.nc1-hover{background-color:var(--white);color:var(--text)}.nc1-link.fade-in.nc1-active{transition:opacity 0.6s,transform 0.6s,background-color 0.2s,color 0.2s}.nc1-link-text.nc1-active{color:var(--white)}.nc1-link-text.nc1-active.nc1-hover{color:var(--text);transform:translate(16px)}.nc1-link-arrow.nc1-active{border-top-color:var(--light-grey);border-right-color:var(--light-grey)}.nc1-link-arrow.nc1-active.nc1-hover{opacity:0;transform:translate(10px) rotate(45deg)}.nc1-link-arrow-in.nc1-hover{opacity:1;transform:translateY(-50%) rotate(45deg)}@media screen and (max-width:991px){.nc1-links.nc1-open{display:flex}}
+</style>
+
+<!-- Site scripts: tracking params → GTM, Book Now link tracking, HubSpot tracking loader -->
+<script defer src="https://cdn.jsdelivr.net/gh/savoyaground/core@<COMMIT>/site.js"></script>
+
+<!-- Google Tag Manager -->
+<script>
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MJQ78Q8');
+</script>
+<!-- End Google Tag Manager -->
+
+<!-- Squatch (Rewards & Referrals): only on these paths. Inline because those pages call squatch.ready right away. -->
+<script>
+(function () {
+  var allowedPaths = ['/', '/share', '/referral', '/rewards', '/thank-you'];
+  if (allowedPaths.indexOf(window.location.pathname) === -1) return;
+  !function(a,b){a("squatch","https://fast.ssqt.io/squatch-js@2",b)}(function(a,b,c){var d,e,f;c["_"+a]={},c[a]={},c[a].ready=function(b){c["_"+a].ready=c["_"+a].ready||[];c["_"+a].ready.push(b)},e=document.createElement("script"),e.async=1,e.src=b,f=document.getElementsByTagName("script")[0],f.parentNode.insertBefore(e,f)},this);
+})();
+</script>
+
+<!-- LinkedIn Insight Tag loads from Google Tag Manager ("LinkedIn Insight Tag - Base (merged)"), so it isn't repeated here -->
+
+<!-- No-JS fallbacks: Google Tag Manager, LinkedIn Insight -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MJQ78Q8" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript><img height="1" width="1" style="display:none;" alt="" src="https://px.ads.linkedin.com/collect/?pid=7323492&fmt=gif" /></noscript>
+
+<!-- Structured data: Organization + Service -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Savoya",
+  "url": "https://www.savoya.com/",
+  "logo": "https://www.savoya.com/logo.png",
+  "description": "Savoya is a global black car and chauffeur service platform providing secure, premium ground transportation for executives, corporate travelers, and high-profile clients.",
+  "telephone": "+1-866-916-3081",
+  "email": "Inquire@Savoya.com",
+  "sameAs": [
+    "https://www.linkedin.com/company/savoya/",
+    "https://www.instagram.com/savoyaground/",
+    "https://www.facebook.com/savoyaground/",
+    "https://x.com/savoyaground"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-866-916-3081",
+    "contactType": "customer service",
+    "availableLanguage": "English"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Executive Chauffeur and Black Car Service",
+  "serviceType": "Ground transportation",
+  "provider": {
+    "@type": "Organization",
+    "name": "Savoya",
+    "url": "https://www.savoya.com/"
+  },
+  "areaServed": "Worldwide",
+  "description": "Premium black car and executive chauffeur service with vetted chauffeurs, real-time trip monitoring, and 24/7 support across 300+ global markets.",
+  "url": "https://www.savoya.com/service"
+}
+</script>
+
+<meta name="ahrefs-site-verification" content="6a32a45d0ef7cdce98d564b5f8ef663d08559ed8918c15525539c00361cd7af7">
