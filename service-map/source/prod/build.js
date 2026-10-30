@@ -11,6 +11,8 @@ const html = fs.readFileSync(path.join(ROOT, SRC, "app.html"), "utf8");
 let js = fs.readFileSync(path.join(ROOT, SRC, "app.js"), "utf8");
 let css = html.slice(html.indexOf("<style>") + 7, html.indexOf("</style>"));
 let markup = html.slice(html.indexOf('<div class="app" id="app">'), html.indexOf("<script"));
+// start on the dark map theme so the headline card (shown before the data arrives) already has its final look
+markup = markup.replace('<div class="app" id="app">', '<div class="app" id="app" data-map="dark">');
 
 /* ---------- Renames: classes that collide with savoya.com styles, and every id ---------- */
 const CLS = ["btn-primary", "btn-ghost", "btn", "card", "is-open", "left", "list", "pop", "quote", "row", "stats"];
@@ -134,7 +136,12 @@ css += `
   animation: svm-wait 1.4s ease-out infinite; }
 @keyframes svm-wait { to { transform: scale(6.2); opacity: 0; } }
 .svm-loading p { margin: 64px 0 0; position: absolute; font-size: 13px; color: #8E8B85; }
-:root:not(.is-ready) .app > :not(canvas) { visibility: hidden; }
+:root:not(.is-ready) .app > :not(canvas):not(.svm-left) { visibility: hidden; }
+/* the headline card shows as soon as the map's frame is in, without waiting for the map data:
+   it is the page's largest paint, so holding it back cost ~3 s of LCP */
+:root:not(.is-ready) .svm-left > :not(:first-child) { visibility: hidden; }
+.svm-left > :first-child { animation: pane-in 500ms var(--ease) backwards; }
+:root.is-ready .svm-left > :first-child { animation: none; }
 :root.is-ready .svm-loading { opacity: 0; }
 @media (max-width: 860px) { :root { height: calc(100svh - var(--svm-top, 88px) - 56px); min-height: 520px; } }
 `;

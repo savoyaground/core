@@ -879,6 +879,11 @@
   animation: svm-svm-wait 1.4s ease-out infinite; }
 @keyframes svm-svm-wait { to { transform: scale(6.2); opacity: 0; } }
 .svm .svm-loading p { margin: 64px 0 0; position: absolute; font-size: 13px; color: #8E8B85; }
-.svm:not(.is-ready) .app > :not(canvas) { visibility: hidden; }
+.svm:not(.is-ready) .app > :not(canvas):not(.svm-left) { visibility: hidden; }
+/* the headline card shows as soon as the map's frame is in, without waiting for the map data:
+   it is the page's largest paint, so holding it back cost ~3 s of LCP */
+.svm:not(.is-ready) .svm-left > :not(:first-child) { visibility: hidden; }
+.svm .svm-left > :first-child { animation: svm-pane-in 500ms var(--ease) backwards; }
+.svm.is-ready .svm-left > :first-child { animation: none; }
 .svm.is-ready .svm-loading { opacity: 0; }
 @media (max-width: 860px) { .svm { height: calc(100svh - var(--svm-top, 88px) - 56px); min-height: 520px; } }
