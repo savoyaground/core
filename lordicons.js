@@ -43,7 +43,12 @@
   function applyIcon(icon, id, theme, trigger) {
     if (!id) return;
  
-    setIfChanged(icon, "src", `https://cdn.lordicon.com/${id}.json`);
+    // A Lordicon ID ("jprswwur") loads from Lordicon's CDN; a full URL or a
+    // .json path (e.g. our own icons/lordicons/*.json on jsDelivr) loads as is.
+    const src = /^https?:\/\//.test(id) || id.endsWith(".json")
+      ? id
+      : `https://cdn.lordicon.com/${id}.json`;
+    setIfChanged(icon, "src", src);
     setIfChanged(icon, "colors", colorsFor(theme));
     setIfChanged(icon, "trigger", trigger || DEFAULT_TRIGGER);
  
