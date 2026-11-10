@@ -88,11 +88,13 @@
     svg.innerHTML =
       '<defs>' +
       '<linearGradient id="abL' + uid + '" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="' + INK + '" stop-opacity=".92"/><stop offset=".42" stop-color="' + INK + '" stop-opacity=".35"/><stop offset=".7" stop-color="' + INK + '" stop-opacity="0"/></linearGradient>' +
+      '<linearGradient id="abV' + uid + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="' + INK + '" stop-opacity=".9"/><stop offset=".4" stop-color="' + INK + '" stop-opacity=".55"/><stop offset=".62" stop-color="' + INK + '" stop-opacity="0"/></linearGradient>' +
       '<radialGradient id="abR' + uid + '" cx=".35" cy=".45" r=".8"><stop offset=".35" stop-color="' + INK + '" stop-opacity="0"/><stop offset="1" stop-color="' + INK + '" stop-opacity=".85"/></radialGradient>' +
       '<radialGradient id="abG' + uid + '"><stop offset="0" stop-color="' + GOLD + '"/><stop offset=".35" stop-color="' + COPPER + '" stop-opacity=".55"/><stop offset="1" stop-color="' + COPPER + '" stop-opacity="0"/></radialGradient>' +
       '</defs>';
 
-    var city = el("g", {}, svg), faces = [];
+    var art = el("g", { "class": "ab-art" }, svg);
+    var city = el("g", {}, art), faces = [];
     var rx = ROUTE[0][0], ry = Math.min(ROUTE[0][1], 520);
     for (var i = 0; i < SQ.length; i++) {
       var s = null, f = null;
@@ -118,21 +120,23 @@
     }
 
     var pts = ROUTE.map(function (p) { return p.join(","); }).join(" ");
-    var route = el("polyline", { points: pts, "class": "ab-route", pathLength: "1" }, svg);
-    var radar = el("g", {}, svg);
+    var route = el("polyline", { points: pts, "class": "ab-route", pathLength: "1" }, art);
+    var radar = el("g", {}, art);
     radar.innerHTML =
       ['', ' p2', ' p3'].map(function (c) { return '<circle class="ab-ping' + c + '" cx="' + DOT[0] + '" cy="' + DOT[1] + '" r="11"/>'; }).join("") +
       '<circle class="ab-halo" cx="' + DOT[0] + '" cy="' + DOT[1] + '" r="20" fill="' + COPPER + '" fill-opacity=".18"/>' +
       '<circle class="ab-halo" cx="' + DOT[0] + '" cy="' + DOT[1] + '" r="11" fill="' + COPPER + '" fill-opacity=".35"/>' +
       '<circle class="ab-dot" cx="' + DOT[0] + '" cy="' + DOT[1] + '" r="6" fill="' + COPPER + '" stroke="' + INK + '" stroke-width="2"/>';
-    var head = el("circle", { r: 22, fill: "url(#abG" + uid + ")" }, svg);
+    var head = el("circle", { r: 22, fill: "url(#abG" + uid + ")" }, art);
     head.style.opacity = 0;
-    el("rect", { width: 1280, height: 480, fill: "url(#abL" + uid + ")" }, svg);
-    el("rect", { width: 1280, height: 480, fill: "url(#abR" + uid + ")" }, svg);
+    var shadeL = el("rect", { width: 1280, height: 480, fill: "url(#abL" + uid + ")" }, svg);
+    var shadeR = el("rect", { width: 1280, height: 480, fill: "url(#abR" + uid + ")" }, svg);
 
     band.insertBefore(svg, band.firstChild);
     band.style.backgroundImage = "none";
-    return { svg: svg, route: route, head: head, faces: faces };
+    var st = { svg: svg, art: art, band: band, uid: uid, shadeL: shadeL, shadeR: shadeR, route: route, head: head, faces: faces };
+    layout(st);
+    return st;
   }
 
   function lightUp(st) {
@@ -141,7 +145,7 @@
       "stroke-width": 2, "vector-effect": "non-scaling-stroke"
     });
     ring.style.transformBox = "fill-box"; ring.style.transformOrigin = "center";
-    st.svg.insertBefore(ring, st.head);
+    st.art.insertBefore(ring, st.head);
     ring.animate([{ transform: "scale(1)", opacity: .9 }, { transform: "scale(140)", opacity: 0 }],
       { duration: 1900, easing: "cubic-bezier(.2,.6,.3,1)", fill: "forwards" }).onfinish = function () { ring.remove(); };
     st.faces.forEach(function (f) {
@@ -171,6 +175,46 @@
     requestAnimationFrame(tick);
   }
 
+  /* Phones and small tablets: the band is tall and narrow, so the landscape
+     artwork would scale up ~2.6x and land the radar behind the headline.
+     Below 768px the city turns portrait (rotated -90deg, 480x1280) and the
+     frame shifts so the radar sits in the gap between the copy and the phones;
+     the route enters from the right edge. The shade fades top-down instead of
+     left-right, so the copy stays readable. */
+  var PHONE = 767;
+  function layout(st) {
+    var band = st.band, svg = st.svg, W = band.clientWidth, H = band.clientHeight;
+    if (!W || !H || W > PHONE) {
+      st.art.removeAttribute("transform");
+      svg.setAttribute("viewBox", "0 0 1280 480");
+      svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      st.shadeL.setAttribute("width", 1280); st.shadeL.setAttribute("height", 480);
+      st.shadeL.setAttribute("fill", "url(#abL" + st.uid + ")");
+      st.shadeR.setAttribute("width", 1280); st.shadeR.setAttribute("height", 480);
+      return;
+    }
+    st.art.setAttribute("transform", "translate(0 1280) rotate(-90)");
+    var s = Math.max(W / 480, H / 1280);
+    var bTop = band.getBoundingClientRect().top;
+    var copy = band.querySelector(".app-band-copy");
+    var dev = band.querySelector(".app-devices");
+    var copyBottom = copy ? copy.getBoundingClientRect().bottom - bTop : H * 0.5;
+    var devTop = dev ? dev.getBoundingClientRect().top - bTop : copyBottom + 80;
+    if (devTop < copyBottom + 24) devTop = copyBottom + 80;
+    var target = (copyBottom + devTop) / 2;      // where the radar should land, px from band top
+    var dotY = 1280 - DOT[0];                    // radar y after the rotation
+    var vy = dotY - target / s;
+    var vh = H / s, vw = W / s;
+    var vx = (480 - vw) / 2;                     // keep the city centered left to right
+    svg.setAttribute("viewBox", vx + " " + vy + " " + vw + " " + vh);
+    svg.setAttribute("preserveAspectRatio", "none");
+    st.shadeL.setAttribute("x", vx); st.shadeL.setAttribute("y", vy);
+    st.shadeL.setAttribute("width", vw); st.shadeL.setAttribute("height", vh);
+    st.shadeL.setAttribute("fill", "url(#abV" + st.uid + ")");
+    st.shadeR.setAttribute("x", vx); st.shadeR.setAttribute("y", vy);
+    st.shadeR.setAttribute("width", vw); st.shadeR.setAttribute("height", vh);
+  }
+
   function init() {
     var style = document.createElement("style");
     style.textContent = css;
@@ -181,6 +225,9 @@
     bands.forEach(function (band, i) {
       if (band.querySelector(".app-band-city")) return;
       var st = build(band, i);
+      // Re-fit whenever the band changes size (images loading, fonts, rotation)
+      if ("ResizeObserver" in window) new ResizeObserver(function () { layout(st); }).observe(band);
+      else window.addEventListener("resize", function () { layout(st); });
       if (reduce || !("IntersectionObserver" in window) || !Element.prototype.animate) {
         st.svg.classList.add("ab-arrived");
         return;
