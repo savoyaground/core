@@ -158,7 +158,7 @@
   function play(st) {
     st.svg.classList.add("ab-play");
     st.route.setAttribute("stroke-dasharray", "0 1");
-    var t0 = performance.now() + 1500, dur = 2000;
+    var t0 = performance.now() + 1500, dur = 1500;
     function tick(now) {
       var k = Math.min(1, Math.max(0, (now - t0) / dur)), e = ease(k);
       st.route.setAttribute("stroke-dasharray", e + " 1");
