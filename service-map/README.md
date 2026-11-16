@@ -35,5 +35,18 @@ Optional: an element with `id="request"` on the page (the Service Area Request f
 
 ## Updating the city list
 
-`service-areas.json` is a snapshot of the CMS. When cities are added, re-export the collection,
-regenerate the JSON (lat/lon now live on each CMS item), add a thumbnail, commit, and bump the commit hash in Webflow.
+`service-areas.json` is a snapshot of the Webflow CMS. Refresh it with the script (Node 18+, from the repo root):
+
+```bash
+WEBFLOW_TOKEN=xxxx node service-map/source/prod/refresh-data.js --dry-run   # see what would change
+WEBFLOW_TOKEN=xxxx node service-map/source/prod/refresh-data.js             # write the file
+```
+
+- The token needs CMS read access (Webflow: Site settings > Apps & integrations > API access). Never commit it.
+- A city is on the map when it is published and "Hide Service Area" is off.
+- Airports come from each city's "Airport (Reference)" list; towns from "Cities" (or "Hourly Cities").
+- Coordinates already in the file are reused; anything new without coordinates is listed in the report.
+- The script stops if a run would remove more than 10 cities (pass `--force` if that is intended).
+
+Then add a thumbnail for each new city the report lists (`thumbs/{slug}.webp`, 288x288),
+commit, push, and bump the commit hash in the Service Areas page code in Webflow.
